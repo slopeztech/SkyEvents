@@ -19,6 +19,13 @@ Production deployment on Ubuntu 24.04 LTS with Nginx, Gunicorn, Celery, PostgreS
   - [Celery Worker and Beat](#celery-worker-and-beat)
   - [Nginx](#nginx)
   - [SSL — Let's Encrypt](#ssl--lets-encrypt)
+  - [Security Hardening](#security-hardening)
+    - [SSH](#ssh)
+    - [Firewall (UFW)](#firewall-ufw)
+    - [Fail2ban](#fail2ban)
+    - [Automatic security updates](#automatic-security-updates)
+    - [PostgreSQL](#postgresql-1)
+    - [Django settings verification](#django-settings-verification)
   - [Continuous Integration and Deployment](#continuous-integration-and-deployment)
     - [GitHub Actions workflow](#github-actions-workflow)
     - [Required GitHub Secrets](#required-github-secrets)
@@ -470,6 +477,161 @@ EOF
 sudo nginx -t
 sudo systemctl reload nginx
 ```
+
+---
+
+## Security Hardening
+
+Run these steps **after** Nginx and SSL are working. They lock down the server for production.
+
+### SSH
+
+Disable password authentication and root login over SSH:
+
+```bash
+sudo nano /etc/ssh/sshd_config
+```
+
+Ensure these values are set (add or uncomment as needed):
+
+```
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+X11Forwarding no
+MaxAuthTries 3
+LoginGraceTime 30
+```
+
+```bash
+sudo systemctl reload ssh
+```
+
+> **Before reloading SSH:** Confirm your public key is in `~/.ssh/authorized_keys` and you can open a second SSH session. Locking yourself out requires console access.
+
+---
+
+### Firewall (UFW)
+
+Allow only the ports the server legitimately uses:
+
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+# SSH (adjust if using a non-standard port)
+sudo ufw allow 22/tcp
+
+# HTTP and HTTPS (Nginx)
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+sudo ufw enable
+sudo ufw status verbose
+```
+
+Verify that **no other ports** are exposed. Redis (6379) and PostgreSQL (5432) must be bound to `127.0.0.1` only (already done in their respective setup steps).
+
+---
+
+### Fail2ban
+
+Block IP addresses after repeated failed SSH (and optionally Nginx) login attempts:
+
+```bash
+sudo apt install -y fail2ban
+
+sudo tee /etc/fail2ban/jail.d/skyevents.conf > /dev/null <<'EOF'
+[sshd]
+enabled  = true
+port     = ssh
+maxretry = 5
+bantime  = 3600
+findtime = 600
+
+[nginx-http-auth]
+enabled  = true
+maxretry = 5
+bantime  = 3600
+findtime = 600
+EOF
+
+sudo systemctl enable --now fail2ban
+sudo fail2ban-client status
+```
+
+---
+
+### Automatic security updates
+
+Install unattended-upgrades to apply OS security patches automatically:
+
+```bash
+sudo apt install -y unattended-upgrades
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+```
+
+Verify the configuration:
+
+```bash
+cat /etc/apt/apt.conf.d/20auto-upgrades
+# Should contain:
+# APT::Periodic::Update-Package-Lists "1";
+# APT::Periodic::Unattended-Upgrade "1";
+```
+
+---
+
+### PostgreSQL
+
+```bash
+# Confirm PostgreSQL is not listening on external interfaces
+sudo -u postgres psql -c "SHOW listen_addresses;"
+# Expected: localhost
+
+# Revoke public schema creation from regular users (PostgreSQL 15+)
+sudo -u postgres psql -d skyevents <<'EOF'
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+EOF
+
+# Confirm the app user has only the privileges it needs
+sudo -u postgres psql -c "\du skyevents"
+```
+
+---
+
+### Django settings verification
+
+Confirm that all security-critical Django settings are correct in `.env` / `config/settings/production.py`:
+
+```bash
+# Quick check — print the values Django actually sees at runtime
+sudo -u skyevents bash -c "
+  cd /srv/skyevents/app && \
+  source .venv/bin/activate && \
+  python manage.py shell --settings=config.settings.production -c \
+    'from django.conf import settings; \
+     checks = [\
+       (\"DEBUG\", settings.DEBUG, False), \
+       (\"SECURE_SSL_REDIRECT\", settings.SECURE_SSL_REDIRECT, True), \
+       (\"SESSION_COOKIE_SECURE\", settings.SESSION_COOKIE_SECURE, True), \
+       (\"CSRF_COOKIE_SECURE\", settings.CSRF_COOKIE_SECURE, True), \
+       (\"SECURE_HSTS_SECONDS\", settings.SECURE_HSTS_SECONDS, 31536000), \
+       (\"SECURE_HSTS_INCLUDE_SUBDOMAINS\", settings.SECURE_HSTS_INCLUDE_SUBDOMAINS, True), \
+     ]; \
+     [print(f\"{k}: {v}  {\\"OK\\" if v==expected else \\"WRONG — expected: \\" + str(expected)}\") for k,v,expected in checks]'"
+```
+
+Run Django's built-in deployment checklist:
+
+```bash
+sudo -u skyevents bash -c "
+  cd /srv/skyevents/app && \
+  source .venv/bin/activate && \
+  python manage.py check --deploy --settings=config.settings.production"
+```
+
+Address every item flagged as `CRITICAL` or `ERROR` before going live.
 
 ---
 

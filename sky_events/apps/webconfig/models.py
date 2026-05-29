@@ -151,12 +151,19 @@ class SiteConfig(models.Model):
         default="",
         help_text=_("Optional public contact address shown in the footer."),
     )
+    footer_tagline = models.CharField(
+        _("footer tagline"),
+        max_length=120,
+        blank=True,
+        default="",
+        help_text=_("Short tagline displayed next to the logo in the footer (leave blank to hide)."),
+    )
     footer_text = models.CharField(
         _("footer text"),
         max_length=255,
         blank=True,
         default="",
-        help_text=_("Optional extra line displayed at the bottom of the page."),
+        help_text=_("Optional line shown at the right of the copyright bar (e.g. \"Built with ♥\"). Leave blank for the default."),
     )
 
     class Meta:

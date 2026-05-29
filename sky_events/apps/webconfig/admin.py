@@ -53,7 +53,7 @@ class SiteConfigAdmin(admin.ModelAdmin):
         ),
         (
             "Contact / Footer",
-            {"fields": ("contact_email", "footer_text")},
+            {"fields": ("contact_email", "footer_tagline", "footer_text")},
         ),
     )
 
