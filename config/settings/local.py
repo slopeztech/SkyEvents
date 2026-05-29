@@ -33,7 +33,7 @@ WHITENOISE_AUTOREFRESH = True
 # ---------------------------------------------------------------------------
 # Debug toolbar
 # ---------------------------------------------------------------------------
-INSTALLED_APPS += ["debug_toolbar", "django_browser_reload"]  # type: ignore[name-defined]
+INSTALLED_APPS += ["debug_toolbar", "django_browser_reload", "tailwind"]  # type: ignore[name-defined]
 
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",

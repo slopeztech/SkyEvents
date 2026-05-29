@@ -83,7 +83,6 @@ LOCAL_APPS: list[str] = [
     "sky_events.apps.reports",
     "sky_events.apps.webconfig",
     # Web UI
-    "tailwind",
     "theme",
     "sky_events.apps.web",
 ]
