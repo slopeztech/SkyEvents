@@ -58,6 +58,12 @@ class EventNotice(TimeStampedModel):
         default=EventType.UNKNOWN,
     )
     observation_date = models.DateField(_("observation date"))
+    observation_time = models.TimeField(
+        _("observation time"),
+        null=True,
+        blank=True,
+        help_text=_("Local time when the event was observed (leave blank if unknown)."),
+    )
     location = models.CharField(
         _("location"),
         max_length=255,

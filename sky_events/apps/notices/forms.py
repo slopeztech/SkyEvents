@@ -25,10 +25,16 @@ class EventNoticeForm(forms.ModelForm):
         label=_("Observation date"),
         widget=forms.DateInput(attrs={"type": "date"}),
     )
+    observation_time = forms.TimeField(
+        label=_("Observation time"),
+        required=False,
+        widget=forms.TimeInput(attrs={"type": "time"}),
+        help_text=_("Leave blank if unknown."),
+    )
 
     class Meta:
         model = EventNotice
-        fields = ["name", "email", "event_type", "observation_date", "location", "description"]
+        fields = ["name", "email", "event_type", "observation_date", "observation_time", "location", "description"]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
         }
