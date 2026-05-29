@@ -43,8 +43,6 @@ X_FRAME_OPTIONS = "DENY"
 # ---------------------------------------------------------------------------
 # Database — require SSL in production
 # ---------------------------------------------------------------------------
-import dj_database_url  # type: ignore[import-untyped]  # noqa: E402, F401
-
 DATABASES = {  # type: ignore[assignment]
     "default": {
         **env.db("DATABASE_URL"),
