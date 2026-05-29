@@ -31,6 +31,10 @@ Production deployment on Ubuntu 24.04 LTS with Nginx, Gunicorn, Celery, PostgreS
     - [Django management shell](#django-management-shell)
     - [Database backup](#database-backup)
     - [Rotate logs](#rotate-logs)
+  - [Troubleshooting](#troubleshooting)
+    - [403 Forbidden on static and media files](#403-forbidden-on-static-and-media-files)
+    - [500 Internal Server Error on login — `ValueError: Port could not be cast to integer value`](#500-internal-server-error-on-login--valueerror-port-could-not-be-cast-to-integer-value)
+    - [`TypeError: 'str' object is not callable` in structlog — logging errors fill the journal](#typeerror-str-object-is-not-callable-in-structlog--logging-errors-fill-the-journal)
 
 ---
 
@@ -53,10 +57,14 @@ sudo apt update && sudo apt upgrade -y
 # Install system dependencies
 sudo apt install -y python3.12 python3.12-venv python3.12-dev \
     build-essential libpq-dev git curl nginx certbot python3-certbot-nginx \
-    supervisor
+    supervisor gettext
 
 # Create a dedicated system user for the application
 sudo useradd --system --shell /bin/bash --home /srv/skyevents --create-home skyevents
+
+# Allow Nginx (www-data) to read static/media files
+# useradd creates the home directory with 700 by default, which blocks Nginx
+sudo chmod 755 /srv/skyevents
 ```
 
 ---
@@ -97,6 +105,14 @@ sudo sed -i 's/^# requirepass .*/requirepass change_this_redis_password/' /etc/r
 sudo systemctl enable --now redis-server
 ```
 
+> **Critical — use a hex password for Redis.** The Redis password is embedded directly in the `REDIS_URL` (`redis://:PASSWORD@host:port/db`). If the password contains characters that are special in URLs (`/`, `+`, `=`), Python's URL parser will misinterpret the URL and Django will crash with `ValueError: Port could not be cast to integer value` on every request that touches the cache (e.g. login). Always generate the Redis password with:
+>
+> ```bash
+> openssl rand -hex 32
+> ```
+>
+> Do **not** use `openssl rand -base64 32` for a password that goes inside a URL.
+
 ---
 
 ## Application Setup
@@ -113,7 +129,12 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements/production.txt
 EOF
+
+# Allow Nginx (www-data) to traverse into the app directory to serve static/media files
+sudo chmod 755 /srv/skyevents/app
 ```
+
+> **Note — directory permissions:** `useradd --create-home` sets the home directory to `700`. The earlier `chmod 755 /srv/skyevents` opens the home itself, but the cloned `app/` subdirectory will also be `700` by default. Without the `chmod 755 /srv/skyevents/app` above, Nginx returns **403 Forbidden** for every static and media file even though the `location /static/` alias is correct.
 
 ---
 
@@ -236,6 +257,17 @@ sudo systemctl status skyevents-gunicorn
 
 > **Workers:** A good starting value is `2 × CPU_cores + 1`. Adjust based on load.
 
+> **Note — `/run/skyevents/` socket directory:** The `RuntimeDirectory=skyevents` directive tells systemd to create `/run/skyevents/` automatically when the service starts. If Gunicorn fails immediately with "No such file or directory" for the socket path, the directory was not created (can happen on some systemd versions). Verify with `ls /run/skyevents/`; if missing, the daemon-reload + restart cycle usually fixes it:
+>
+> ```bash
+> sudo systemctl daemon-reload
+> sudo systemctl restart skyevents-gunicorn
+> # If still missing, create it manually and restart:
+> sudo mkdir -p /run/skyevents
+> sudo chown skyevents:skyevents /run/skyevents
+> sudo systemctl restart skyevents-gunicorn
+> ```
+
 ---
 
 ## Celery Worker and Beat
@@ -307,6 +339,10 @@ sudo systemctl enable --now skyevents-celery skyevents-celerybeat
 
 ## Nginx
 
+> **Note:** Deploy an HTTP-only config first. Certbot will obtain the certificate and rewrite the vhost to add SSL automatically.
+
+**Step 1 — HTTP-only config (pre-SSL):**
+
 ```bash
 sudo tee /etc/nginx/sites-available/skyevents > /dev/null <<'EOF'
 upstream skyevents_gunicorn {
@@ -317,29 +353,9 @@ server {
     listen 80;
     server_name skyevents.example.com;
 
-    # Redirect all HTTP to HTTPS (certbot will update this block)
-    return 301 https://$host$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name skyevents.example.com;
-
-    # --- SSL (managed by certbot) ---
-    ssl_certificate     /etc/letsencrypt/live/skyevents.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/skyevents.example.com/privkey.pem;
-    include             /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
-
-    # --- Security headers ---
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-    add_header X-Content-Type-Options    nosniff always;
-    add_header X-Frame-Options           DENY always;
-    add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
-
     client_max_body_size 100M;
 
-    # --- Static files (only if not using S3) ---
+    # --- Static files ---
     location /static/ {
         alias /srv/skyevents/app/staticfiles/;
         expires 1y;
@@ -347,7 +363,7 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
-    # --- Media files (only if not using S3) ---
+    # --- Media files ---
     location /media/ {
         alias /srv/skyevents/app/media/;
         expires 7d;
@@ -367,7 +383,7 @@ server {
 }
 EOF
 
-# Enable the site and test the configuration
+# Enable, test, and reload
 sudo ln -sf /etc/nginx/sites-available/skyevents /etc/nginx/sites-enabled/skyevents
 sudo nginx -t
 sudo systemctl reload nginx
@@ -377,8 +393,10 @@ sudo systemctl reload nginx
 
 ## SSL — Let's Encrypt
 
+**Step 2 — Obtain certificate and auto-configure HTTPS:**
+
 ```bash
-# Obtain a certificate (Nginx plugin handles configuration automatically)
+# Certbot rewrites the Nginx vhost to add the SSL server block automatically
 sudo certbot --nginx -d skyevents.example.com --email admin@skyevents.example.com --agree-tos --no-eff-email
 
 # Verify automatic renewal
@@ -386,6 +404,71 @@ sudo certbot renew --dry-run
 
 # Certbot installs a systemd timer for auto-renewal; verify it is active
 sudo systemctl status certbot.timer
+```
+
+**Step 3 — Add security headers** (certbot leaves them out — replace the whole file with the final config):
+
+```bash
+sudo tee /etc/nginx/sites-available/skyevents > /dev/null <<'EOF'
+upstream skyevents_gunicorn {
+    server unix:/run/skyevents/gunicorn.sock fail_timeout=0;
+}
+
+# HTTP → HTTPS redirect
+server {
+    listen 80;
+    server_name skyevents.example.com;
+    return 301 https://$host$request_uri;
+}
+
+# HTTPS
+server {
+    listen 443 ssl;
+    server_name skyevents.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/skyevents.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/skyevents.example.com/privkey.pem;
+    include             /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
+
+    # --- Security headers ---
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    add_header X-Content-Type-Options    nosniff always;
+    add_header X-Frame-Options           DENY always;
+    add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
+
+    client_max_body_size 100M;
+
+    # --- Static files ---
+    location /static/ {
+        alias /srv/skyevents/app/staticfiles/;
+        expires 1y;
+        access_log off;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # --- Media files ---
+    location /media/ {
+        alias /srv/skyevents/app/media/;
+        expires 7d;
+        access_log off;
+    }
+
+    # --- Application ---
+    location / {
+        proxy_pass         http://skyevents_gunicorn;
+        proxy_set_header   Host              $http_host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_redirect     off;
+        proxy_read_timeout 90;
+    }
+}
+EOF
+
+sudo nginx -t
+sudo systemctl reload nginx
 ```
 
 ---
@@ -637,4 +720,97 @@ sudo tee /etc/logrotate.d/skyevents > /dev/null <<'EOF'
     endscript
 }
 EOF
+```
+
+---
+
+## Troubleshooting
+
+Issues encountered on the first production deployment and how they were resolved.
+
+---
+
+### 403 Forbidden on static and media files
+
+**Symptom:** The site loads HTML but all CSS/JS/images return 403. Nginx error log shows `permission denied` for paths under `/srv/skyevents/app/staticfiles/`.
+
+**Cause:** `useradd --create-home` creates the home directory with mode `700`. The `app/` subdirectory cloned inside it inherits the same restrictive permissions. Nginx runs as `www-data`, which cannot traverse a directory it has no execute (`x`) bit on, so it returns 403 even though the `location /static/` alias in the Nginx config is correct.
+
+**Fix:**
+```bash
+sudo chmod 755 /srv/skyevents       # home directory (already in setup steps)
+sudo chmod 755 /srv/skyevents/app   # cloned repo root
+```
+
+---
+
+### 500 Internal Server Error on login — `ValueError: Port could not be cast to integer value`
+
+**Symptom:** Logging into the app returns HTTP 500. Gunicorn logs show:
+
+```
+ValueError: Port could not be cast to integer value as '<random_string>'
+```
+
+The full traceback goes through `django_redis → redis.connection.parse_url → urllib.parse`.
+
+**Cause:** The Redis password was generated with `openssl rand -base64 32`, which produces a string containing `/`, `+`, and `=`. These characters have special meaning in URLs. When the password is embedded in `REDIS_URL=redis://:PASSWORD@127.0.0.1:6379/0`, the `/` inside the password terminates the authority component early. Python's URL parser then tries to interpret part of the password as the host or port, and fails.
+
+**Fix:** Regenerate the Redis password using hex encoding, which only produces `[0-9a-f]` characters and is always safe in a URL:
+
+```bash
+# Generate a new URL-safe password
+openssl rand -hex 32
+
+# Update redis.conf
+sudo nano /etc/redis/redis.conf
+# Change: requirepass <old_password>
+# To:     requirepass <new_hex_password>
+sudo systemctl restart redis-server
+
+# Verify Redis responds
+redis-cli -a <new_hex_password> ping   # should return PONG
+
+# Update .env
+sudo nano /srv/skyevents/app/.env
+# REDIS_URL=redis://:<new_hex_password>@127.0.0.1:6379/0
+# CELERY_BROKER_URL=redis://:<new_hex_password>@127.0.0.1:6379/0
+
+# Restart all services
+sudo systemctl restart skyevents-gunicorn skyevents-celery skyevents-celerybeat
+```
+
+> **Rule of thumb:** Any secret that is embedded inside a URL (Redis, database, broker) must only contain characters that are safe in a URL without percent-encoding. `openssl rand -hex 32` is the safest choice.
+
+---
+
+### `TypeError: 'str' object is not callable` in structlog — logging errors fill the journal
+
+**Symptom:** Every request produces a `--- Logging error ---` block in the Gunicorn journal:
+
+```
+File "…/structlog/stdlib.py", line 1098, in format
+    ed = p(logger, meth_name, cast(EventDict, ed))
+TypeError: 'str' object is not callable
+```
+
+Requests still succeed (or fail for other reasons); this error is in the logging layer only.
+
+**Cause:** `structlog.configure()` was called with a string (e.g. a processor class name) somewhere in `LOGGING` instead of the actual callable. This typically happens when a processor is referenced as `"structlog.processors.JSONRenderer"` (a string) rather than `structlog.processors.JSONRenderer()` (an instantiated callable).
+
+**Fix:** Review `LOGGING` in `config/settings/production.py` and ensure every entry in the `processors` list is an instantiated callable, not a string:
+
+```python
+# Wrong
+"processors": ["structlog.stdlib.add_log_level"]
+
+# Correct
+import structlog
+"processors": [structlog.stdlib.add_log_level]
+```
+
+After fixing, reload Gunicorn:
+
+```bash
+sudo systemctl reload skyevents-gunicorn
 ```
