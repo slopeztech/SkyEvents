@@ -1,0 +1,282 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}[{{ event.code }}] {{ event.name }}{% endblock %}
+{% block topbar_title %}{% trans "Event detail" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-start justify-between">
+  <div>
+    <p class="text-xs font-mono text-indigo-500 dark:text-indigo-400 mb-1">{{ event.code }}</p>
+    <h2 class="page-title">{{ event.name }}</h2>
+    <p class="page-subtitle">{{ event.get_event_type_display }} · {{ event.detected_at|date:"Y-m-d H:i" }} UTC</p>
+  </div>
+  {% if request.user.role == 'admin' %}
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <form method="post" action="{% url 'events:publish' event.code %}">
+        {% csrf_token %}
+        {% if event.status == 'published' %}
+          <button type="submit" class="btn-ghost btn-sm">{% trans "Unpublish" %}</button>
+        {% else %}
+          <button type="submit" class="btn-primary btn-sm">{% trans "Publish" %}</button>
+        {% endif %}
+      </form>
+      <a href="{% url 'events:edit' event.code %}" class="btn-ghost btn-sm">{% trans "Edit" %}</a>
+    </div>
+  {% endif %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <div class="lg:col-span-2 space-y-6">
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Overview" %}</h3>
+        {% if event.status == 'published' %}
+          <span class="badge badge-green"><span class="dot-green"></span>{{ event.get_status_display }}</span>
+        {% elif event.status == 'confirmed' %}
+          <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ event.get_status_display }}</span>
+        {% elif event.status == 'archived' %}
+          <span class="badge"><span class="dot"></span>{{ event.get_status_display }}</span>
+        {% else %}
+          <span class="badge badge-red"><span class="dot-red"></span>{{ event.get_status_display }}</span>
+        {% endif %}
+      </div>
+      <div class="card-body grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Type" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ event.get_event_type_display }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Detected at (UTC)" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ event.detected_at|date:"Y-m-d H:i:s" }}</p>
+        </div>
+        {% if event.duration_ms %}
+          <div>
+            <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Duration" %}</p>
+            <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ event.duration_ms }} ms</p>
+          </div>
+        {% endif %}
+        {% if event.peak_magnitude is not None %}
+          <div>
+            <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Peak magnitude" %}</p>
+            <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ event.peak_magnitude }}</p>
+          </div>
+        {% endif %}
+        {% if event.altitude_km is not None %}
+          <div>
+            <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Altitude" %}</p>
+            <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ event.altitude_km }} km</p>
+          </div>
+        {% endif %}
+        {% if event.velocity_km_s is not None %}
+          <div>
+            <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Velocity" %}</p>
+            <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ event.velocity_km_s }} km/s</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if event.description %}
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Description" %}</h3></div>
+        <div class="card-body prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
+          {{ event.description|linebreaksbr }}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Detecting stations" %}</h3>
+        <span class="text-xs text-slate-400">{{ event.stations.count }}</span>
+      </div>
+      {% if event.stations.exists %}
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{% trans "Station" %}</th>
+                <th>{% trans "Owner" %}</th>
+                <th>{% trans "Code" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for station in event.stations.all %}
+                <tr>
+                  <td class="font-medium text-slate-900 dark:text-slate-100">{{ station.name }}</td>
+                  <td class="text-slate-500 dark:text-slate-400">{{ station.owner.get_full_name|default:station.owner.email }}</td>
+                  <td class="font-mono text-xs text-slate-400">{{ station.code }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="card-body">
+          <p class="text-sm text-slate-400">{% trans "No stations linked." %}</p>
+        </div>
+      {% endif %}
+    </div>
+
+    {# ── Reports linked to this event ─────────────────────────────────── #}
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Reports" %}</h3>
+        <span class="text-xs text-slate-400">{{ event.reports.count }}</span>
+      </div>
+      {% with reports=event.reports.select_related %}
+        {% if reports.exists %}
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>{% trans "Station" %}</th>
+                  <th>{% trans "Device" %}</th>
+                  <th>{% trans "Recorded at (UTC)" %}</th>
+                  <th>{% trans "Duration" %}</th>
+                  <th>{% trans "Files" %}</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for rep in reports.all %}
+                  <tr>
+                    <td class="font-medium text-slate-800 dark:text-slate-200">{{ rep.station.name }}</td>
+                    <td class="text-sm text-slate-500">
+                      {% if rep.camera %}{{ rep.camera.name }}{% elif rep.radio_receiver %}{{ rep.radio_receiver.name }}{% else %}—{% endif %}
+                    </td>
+                    <td class="tabular-nums text-sm text-slate-600 dark:text-slate-400">{{ rep.recorded_at|date:"Y-m-d H:i" }}</td>
+                    <td class="tabular-nums text-sm text-slate-500">{{ rep.duration_ms|default:"—" }}{% if rep.duration_ms %} ms{% endif %}</td>
+                    <td class="tabular-nums text-sm text-slate-500">{{ rep.files.count }}</td>
+                    <td>
+                      <a href="{% url 'reports:detail' rep.pk %}" class="btn-ghost btn-xs">{% trans "View" %}</a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="card-body">
+            <p class="text-sm text-slate-400">{% trans "No reports linked." %}</p>
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% if request.user.role == 'admin' %}
+        <div class="px-5 py-3 border-t border-slate-100 dark:border-slate-700">
+          <a href="{% url 'reports:create' %}?event={{ event.pk }}" class="btn-ghost btn-xs">{% trans "Add report" %}</a>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <div class="space-y-6">
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Cameras" %}</h3>
+        <span class="text-xs text-slate-400">{{ event.cameras.count }}</span>
+      </div>
+      {% if event.cameras.exists %}
+        <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+          {% for cam in event.cameras.all %}
+            <li class="px-5 py-3">
+              <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ cam.name }}</p>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">{{ cam.code }} · {{ cam.station.name }}</p>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="card-body">
+          <p class="text-sm text-slate-400">{% trans "No cameras linked." %}</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Radio receivers" %}</h3>
+        <span class="text-xs text-slate-400">{{ event.radio_receivers.count }}</span>
+      </div>
+      {% if event.radio_receivers.exists %}
+        <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+          {% for radio in event.radio_receivers.all %}
+            <li class="px-5 py-3">
+              <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ radio.name }}</p>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">{{ radio.code }} · {{ radio.station.name }}</p>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="card-body">
+          <p class="text-sm text-slate-400">{% trans "No radio receivers linked." %}</p>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if request.user.role == 'admin' and event.notes %}
+      <div class="card border-amber-200 dark:border-amber-800">
+        <div class="card-header bg-amber-50 dark:bg-amber-900/20">
+          <h3 class="card-title text-amber-700 dark:text-amber-400">{% trans "Internal notes" %}</h3>
+        </div>
+        <div class="card-body text-sm text-slate-600 dark:text-slate-300">
+          {{ event.notes|linebreaksbr }}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if request.user.role == 'admin' %}
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">{% trans "Linked notices" %}</h3>
+          <span class="text-xs text-slate-400">{{ event.notices.count }}</span>
+        </div>
+        {% with notices=event.notices.select_related %}
+          {% if notices.exists %}
+            <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+              {% for notice in notices.all %}
+                <li class="px-5 py-3 space-y-0.5">
+                  <p class="text-sm font-medium text-slate-800 dark:text-slate-200">
+                    {{ notice.name }}
+                    <span class="ml-1 text-xs text-slate-400">· {{ notice.observation_date }}</span>
+                  </p>
+                  <p class="text-xs text-slate-500">{{ notice.location }}</p>
+                  <p class="text-xs">
+                    {% if notice.status == 'approved' %}
+                      <span class="text-green-600 dark:text-green-400">{{ notice.get_status_display }}</span>
+                    {% elif notice.status == 'rejected' %}
+                      <span class="text-red-500">{{ notice.get_status_display }}</span>
+                    {% else %}
+                      <span class="text-amber-500">{{ notice.get_status_display }}</span>
+                    {% endif %}
+                  </p>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="card-body">
+              <p class="text-sm text-slate-400">{% trans "No notices linked." %}</p>
+            </div>
+          {% endif %}
+        {% endwith %}
+      </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-body text-xs text-slate-400 space-y-1">
+        <p>{% trans "Created by" %} <span class="text-slate-600 dark:text-slate-300">{{ event.created_by.get_full_name|default:event.created_by.email }}</span></p>
+        <p>{% trans "Created" %} {{ event.created_at|date:"Y-m-d H:i" }} UTC</p>
+        <p>{% trans "Updated" %} {{ event.updated_at|date:"Y-m-d H:i" }} UTC</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

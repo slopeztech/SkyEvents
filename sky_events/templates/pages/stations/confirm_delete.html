@@ -1,0 +1,40 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Delete station" %}{% endblock %}
+{% block topbar_title %}{% trans "Delete station" %}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-[60vh] flex items-center justify-center">
+  <div class="card max-w-lg w-full">
+    <div class="card-header">
+      <h3 class="card-title text-red-600 dark:text-red-400">{% trans "Delete station" %}</h3>
+    </div>
+    <div class="card-body space-y-4">
+      <p class="text-sm text-slate-700 dark:text-slate-300">
+        {% blocktrans with name=station.name %}Are you sure you want to delete the station <strong>{{ name }}</strong>? This action cannot be undone.{% endblocktrans %}
+      </p>
+      {% if camera_count or radio_count %}
+        <div class="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 p-4 text-sm text-amber-800 dark:text-amber-300">
+          <p class="font-semibold mb-1">{% trans "This will also delete:" %}</p>
+          <ul class="list-disc list-inside space-y-0.5">
+            {% if camera_count %}
+              <li>{{ camera_count }} {% blocktrans count counter=camera_count %}camera{% plural %}cameras{% endblocktrans %}</li>
+            {% endif %}
+            {% if radio_count %}
+              <li>{{ radio_count }} {% blocktrans count counter=radio_count %}radio receiver{% plural %}radio receivers{% endblocktrans %}</li>
+            {% endif %}
+          </ul>
+        </div>
+      {% endif %}
+      <form method="post" class="flex items-center justify-end gap-3 pt-2">
+        {% csrf_token %}
+        <a href="{% url 'station:detail' station.code %}" class="btn-ghost btn-sm">{% trans "Cancel" %}</a>
+        <button type="submit" class="btn-danger btn-sm">{% trans "Yes, delete" %}</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

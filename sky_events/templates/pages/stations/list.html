@@ -1,0 +1,112 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Stations" %}{% endblock %}
+{% block topbar_title %}{% trans "Stations" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-center justify-between">
+  <div>
+    <h2 class="page-title">{% trans "Stations" %}</h2>
+    <p class="page-subtitle">{{ paginator.count }} {% trans "total" %}</p>
+  </div>
+  <a href="{% url 'station:create' %}" class="btn-primary btn-sm flex items-center gap-1.5">
+    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
+    </svg>
+    {% trans "New station" %}
+  </a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body py-5">
+    <form method="get" class="flex flex-wrap gap-3 items-center">
+      <input type="text" name="q" value="{{ q }}"
+             placeholder="{% trans "Search name or code…" %}"
+             class="filter-input w-64">
+      <select name="status" class="filter-select w-44">
+        <option value="">{% trans "All statuses" %}</option>
+        {% for val, label in status_choices %}
+          <option value="{{ val }}"{% if status_filter == val %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn-ghost btn-sm">{% trans "Filter" %}</button>
+      {% if q or status_filter %}
+        <a href="{% url 'station:list' %}" class="btn-ghost btn-sm text-slate-400">{% trans "Clear" %}</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+{% if stations %}
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>{% trans "Name" %}</th>
+          <th>{% trans "Code" %}</th>
+          <th>{% trans "Owner" %}</th>
+          <th class="text-center">{% trans "Cameras" %}</th>
+          <th class="text-center">{% trans "Radios" %}</th>
+          <th>{% trans "Status" %}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for station in stations %}
+          <tr>
+            <td class="font-medium text-slate-900 dark:text-slate-100">
+              <a href="{% url 'station:detail' station.code %}" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+                {{ station.name }}
+              </a>
+            </td>
+            <td class="font-mono text-xs text-slate-500">{{ station.code }}</td>
+            <td class="text-slate-600 dark:text-slate-400 text-sm">{{ station.owner.get_full_name }}</td>
+            <td class="text-center text-sm tabular-nums">{{ station.cam_count }}</td>
+            <td class="text-center text-sm tabular-nums">{{ station.radio_count }}</td>
+            <td>
+              {% if station.status == 'active' %}
+                <span class="badge badge-green"><span class="dot-green"></span>{{ station.get_status_display }}</span>
+              {% elif station.status == 'maintenance' %}
+                <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ station.get_status_display }}</span>
+              {% else %}
+                <span class="badge badge-red"><span class="dot-red"></span>{{ station.get_status_display }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="flex items-center gap-2 justify-end">
+                <a href="{% url 'station:edit' station.code %}" class="btn-ghost btn-xs">{% trans "Edit" %}</a>
+                <a href="{% url 'station:delete' station.code %}" class="btn-ghost btn-xs text-red-500 hover:text-red-700">{% trans "Delete" %}</a>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+    <div class="flex items-center justify-between mt-4 text-sm text-slate-500">
+      <span>{% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ paginator.num_pages }}</span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn-ghost btn-xs">{% trans "Previous" %}</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn-ghost btn-xs">{% trans "Next" %}</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+{% else %}
+  <div class="card">
+    <div class="card-body text-center py-16 space-y-3">
+      <p class="text-slate-400 text-sm">{% trans "No stations found." %}</p>
+      <a href="{% url 'station:create' %}" class="btn-primary btn-sm inline-flex items-center gap-1.5">{% trans "Create first station" %}</a>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

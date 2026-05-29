@@ -1,0 +1,42 @@
+{% load i18n static %}
+
+<footer class="footer" aria-label="{% trans "Footer" %}">
+  <div class="container-app">
+    <div class="footer-grid">
+
+      {# Brand column #}
+      <div class="md:col-span-2">
+        <a href="{% url 'web:index' %}" class="footer-brand">
+          <img src="{% static 'images/logo.svg' %}" alt="SkyEvents" width="120" height="28">
+        </a>
+        <p class="footer-desc">
+          {% trans "Automated meteor detection network — coordinating stations, cameras, and radio receivers worldwide." %}
+        </p>
+      </div>
+
+      {# Platform column #}
+      <div>
+        <p class="footer-col-title">{% trans "Platform" %}</p>
+        <ul class="space-y-1">
+          <li><a href="#features" class="footer-link">{% trans "Features" %}</a></li>
+          <li><a href="{% url 'web:login' %}" class="footer-link">{% trans "Sign in" %}</a></li>
+        </ul>
+      </div>
+
+      {# Legal column #}
+      <div>
+        <p class="footer-col-title">{% trans "Legal" %}</p>
+        <ul class="space-y-1">
+          <li><a href="#" class="footer-link">{% trans "Privacy policy" %}</a></li>
+          <li><a href="#" class="footer-link">{% trans "Terms of service" %}</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <p>© {% now "Y" %} SkyEvents. {% trans "All rights reserved." %}</p>
+      <p class="text-slate-500">{% trans "Built with" %} Django &amp; Tailwind CSS</p>
+    </div>
+  </div>
+</footer>

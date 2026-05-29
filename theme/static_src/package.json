@@ -1,0 +1,12 @@
+{
+  "name": "skyevents-theme",
+  "version": "1.0.0",
+  "description": "SkyEvents Tailwind CSS theme",
+  "scripts": {
+    "dev": "tailwindcss -i ./src/styles.css -o ../static/theme/css/styles.css --watch",
+    "build": "tailwindcss -i ./src/styles.css -o ../static/theme/css/styles.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

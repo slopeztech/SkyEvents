@@ -1,0 +1,938 @@
+# SkyEvents — English translations
+# English is the source language, so most msgstr values are empty
+# (Django falls back to the msgid).
+# Run: python manage.py makemessages -l en  to refresh
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: SkyEvents 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-26 04:25+0200\n"
+"PO-Revision-Date: 2026-05-26 00:00+0000\n"
+"Last-Translator: SkyEvents Team\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\sky_events\apps\camera\admin.py:51 .\sky_events\apps\radio\admin.py:55
+msgid "Hardware"
+msgstr ""
+
+#: .\sky_events\apps\camera\admin.py:64
+msgid "Pointing geometry"
+msgstr ""
+
+#: .\sky_events\apps\camera\admin.py:70 .\sky_events\apps\radio\admin.py:61
+msgid "Lifecycle"
+msgstr ""
+
+#: .\sky_events\apps\camera\admin.py:76 .\sky_events\apps\camera\models.py:151
+#: .\sky_events\apps\radio\admin.py:67 .\sky_events\apps\radio\models.py:133
+msgid "Technical parameters"
+msgstr "Technical parameters"
+
+#: .\sky_events\apps\camera\admin.py:83 .\sky_events\apps\radio\admin.py:74
+#: .\sky_events\apps\station\admin.py:95
+msgid "Timestamps"
+msgstr ""
+
+#: .\sky_events\apps\camera\apps.py:16 .\sky_events\apps\camera\models.py:157
+#: .\sky_events\apps\station\admin.py:32
+#: .\sky_events\templates\components\_sidebar.html:55
+#: .\sky_events\templates\components\_sidebar.html:81
+#: .\sky_events\templates\pages\dashboard\admin_home.html:57
+#: .\sky_events\templates\pages\dashboard\admin_home.html:132
+#: .\sky_events\templates\pages\dashboard\owner_home.html:55
+#: .\sky_events\templates\pages\dashboard\owner_home.html:108
+msgid "Cameras"
+msgstr "Cameras"
+
+# ---------------------------------------------------------------------------
+# Stations
+# ---------------------------------------------------------------------------
+#: .\sky_events\apps\camera\models.py:42 .\sky_events\apps\radio\models.py:39
+#: .\sky_events\apps\station\models.py:128
+msgid "Station"
+msgstr "Station"
+
+#: .\sky_events\apps\camera\models.py:43
+msgid "Station this camera belongs to."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:49 .\sky_events\apps\radio\models.py:46
+#: .\sky_events\apps\station\models.py:62
+#: .\sky_events\templates\pages\dashboard\admin_home.html:130
+msgid "Name"
+msgstr "Name"
+
+#: .\sky_events\apps\camera\models.py:50
+msgid "Human-readable name for this camera."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:56 .\sky_events\apps\radio\models.py:53
+#: .\sky_events\apps\station\models.py:69
+msgid "Code"
+msgstr "Code"
+
+#: .\sky_events\apps\camera\models.py:57
+msgid "Unique device identifier for this camera."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:64
+msgid "Camera model"
+msgstr "Camera model"
+
+#: .\sky_events\apps\camera\models.py:65
+msgid "Manufacturer and model name of the camera."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:70
+msgid "Sensor type"
+msgstr "Sensor type"
+
+#: .\sky_events\apps\camera\models.py:71
+msgid "Image sensor type (e.g. CMOS, CCD)."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:76
+msgid "Resolution width (px)"
+msgstr "Resolution width (px)"
+
+#: .\sky_events\apps\camera\models.py:77
+msgid "Horizontal resolution in pixels."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:82
+msgid "Resolution height (px)"
+msgstr "Resolution height (px)"
+
+#: .\sky_events\apps\camera\models.py:83
+msgid "Vertical resolution in pixels."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:88
+msgid "Frame rate (fps)"
+msgstr "Frame rate (fps)"
+
+#: .\sky_events\apps\camera\models.py:89
+msgid "Recording frame rate in frames per second."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:99
+msgid "Field of view (°)"
+msgstr "Field of view (°)"
+
+#: .\sky_events\apps\camera\models.py:100
+msgid "Diagonal field of view in degrees."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:108
+msgid "Focal length (mm)"
+msgstr "Focal length (mm)"
+
+#: .\sky_events\apps\camera\models.py:109
+msgid "Camera lens focal length in millimetres."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:119
+msgid "Azimuth (°)"
+msgstr "Azimuth (°)"
+
+#: .\sky_events\apps\camera\models.py:120
+msgid "Azimuth pointing direction in degrees (0 = North, clockwise)."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:128
+msgid "Elevation (°)"
+msgstr "Elevation (°)"
+
+#: .\sky_events\apps\camera\models.py:129
+msgid "Elevation angle in degrees (0 = horizon, 90 = zenith)."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:138
+#: .\sky_events\apps\radio\models.py:120
+#: .\sky_events\apps\station\models.py:116
+#: .\sky_events\templates\pages\dashboard\admin_home.html:133
+#: .\sky_events\templates\pages\dashboard\owner_home.html:110
+#, fuzzy
+#| msgid "Stations"
+msgid "Status"
+msgstr "Stations"
+
+#: .\sky_events\apps\camera\models.py:143
+#: .\sky_events\apps\radio\models.py:125
+msgid "Installation date"
+msgstr "Installation date"
+
+#: .\sky_events\apps\camera\models.py:144
+msgid "Date the camera was installed at the station."
+msgstr ""
+
+#: .\sky_events\apps\camera\models.py:152
+#: .\sky_events\apps\radio\models.py:134
+msgid "Additional technical parameters as key-value pairs."
+msgstr ""
+
+# ---------------------------------------------------------------------------
+# Cameras
+# ---------------------------------------------------------------------------
+#: .\sky_events\apps\camera\models.py:156
+#: .\sky_events\apps\station\admin.py:31
+msgid "Camera"
+msgstr "Camera"
+
+# ---------------------------------------------------------------------------
+# Shared status choices
+# ---------------------------------------------------------------------------
+#: .\sky_events\apps\core\models.py:35 .\sky_events\apps\users\models.py:141
+msgid "Active"
+msgstr "Active"
+
+#: .\sky_events\apps\core\models.py:36
+msgid "Inactive"
+msgstr "Inactive"
+
+#: .\sky_events\apps\core\models.py:37
+msgid "Maintenance"
+msgstr "Maintenance"
+
+#: .\sky_events\apps\radio\admin.py:49
+#, fuzzy
+#| msgid "Technical parameters"
+msgid "RF parameters"
+msgstr "Technical parameters"
+
+#: .\sky_events\apps\radio\apps.py:16 .\sky_events\apps\radio\models.py:139
+#: .\sky_events\apps\station\admin.py:44
+#: .\sky_events\templates\pages\dashboard\admin_home.html:72
+#: .\sky_events\templates\pages\dashboard\owner_home.html:69
+#: .\sky_events\templates\pages\index.html:196
+msgid "Radio receivers"
+msgstr "Radio receivers"
+
+#: .\sky_events\apps\radio\models.py:40
+msgid "Station this radio receiver belongs to."
+msgstr ""
+
+#: .\sky_events\apps\radio\models.py:47
+msgid "Human-readable name for this radio receiver."
+msgstr ""
+
+#: .\sky_events\apps\radio\models.py:54
+msgid "Unique device identifier for this radio receiver."
+msgstr ""
+
+#: .\sky_events\apps\radio\models.py:61
+msgid "Receiver model"
+msgstr "Receiver model"
+
+#: .\sky_events\apps\radio\models.py:62
+msgid "Manufacturer and model of the radio receiver or SDR dongle."
+msgstr ""
+
+#: .\sky_events\apps\radio\models.py:70
+msgid "Frequency (MHz)"
+msgstr "Frequency (MHz)"
+
+#: .\sky_events\apps\radio\models.py:72
+msgid "Reception centre frequency in megahertz (e.g. 143.050 for GRAVES)."
+msgstr ""
+
+#: .\sky_events\apps\radio\models.py:81
+msgid "Bandwidth (kHz)"
+msgstr "Bandwidth (kHz)"
+
+#: .\sky_events\apps\radio\models.py:82
+msgid "Reception bandwidth in kilohertz."
+msgstr ""
+
+#: .\sky_events\apps\radio\models.py:89
+msgid "Antenna type"
+msgstr "Antenna type"
+
+#: .\sky_events\apps\radio\models.py:91
+msgid "Antenna type used for meteor radio detection (e.g. Yagi, dipole)."
+msgstr ""
+
+#: .\sky_events\apps\radio\models.py:97
+msgid "Polarization"
+msgstr "Polarization"
+
+#: .\sky_events\apps\radio\models.py:99
+msgid "Antenna polarization (e.g. horizontal, vertical, circular)."
+msgstr ""
+
+#: .\sky_events\apps\radio\models.py:107
+msgid "Software"
+msgstr "Software"
+
+#: .\sky_events\apps\radio\models.py:109
+msgid ""
+"Software used for reception and recording (e.g. SDRSharp, GQRX, Spectrum "
+"Lab)."
+msgstr ""
+
+#: .\sky_events\apps\radio\models.py:126
+msgid "Date the radio receiver was installed at the station."
+msgstr ""
+
+# ---------------------------------------------------------------------------
+# Radios
+# ---------------------------------------------------------------------------
+#: .\sky_events\apps\radio\models.py:138 .\sky_events\apps\station\admin.py:43
+msgid "Radio receiver"
+msgstr "Radio receiver"
+
+#: .\sky_events\apps\station\admin.py:82
+#: .\sky_events\templates\pages\dashboard\admin_home.html:131
+#: .\sky_events\templates\pages\dashboard\owner_home.html:107
+#, fuzzy
+#| msgid "Local timezone"
+msgid "Location"
+msgstr "Local timezone"
+
+#: .\sky_events\apps\station\admin.py:88
+#: .\sky_events\apps\station\models.py:123
+msgid "Metadata"
+msgstr "Metadata"
+
+#: .\sky_events\apps\station\apps.py:16
+#: .\sky_events\apps\station\models.py:129
+#: .\sky_events\templates\components\_sidebar.html:47
+#: .\sky_events\templates\pages\dashboard\admin_home.html:42
+msgid "Stations"
+msgstr "Stations"
+
+#: .\sky_events\apps\station\models.py:55
+msgid "Owner"
+msgstr "Owner"
+
+#: .\sky_events\apps\station\models.py:56
+msgid "User who owns and operates this station."
+msgstr ""
+
+#: .\sky_events\apps\station\models.py:63
+msgid "Human-readable station name."
+msgstr ""
+
+#: .\sky_events\apps\station\models.py:70
+msgid "Unique slug identifying this station (URL-safe)."
+msgstr ""
+
+#: .\sky_events\apps\station\models.py:74
+msgid "Description"
+msgstr "Description"
+
+#: .\sky_events\apps\station\models.py:75
+msgid "Optional free-text description of the station."
+msgstr ""
+
+#: .\sky_events\apps\station\models.py:83
+msgid "Latitude"
+msgstr "Latitude"
+
+#: .\sky_events\apps\station\models.py:84
+msgid "Geographic latitude in decimal degrees. Range: −90 to +90."
+msgstr ""
+
+#: .\sky_events\apps\station\models.py:90
+msgid "Longitude"
+msgstr "Longitude"
+
+#: .\sky_events\apps\station\models.py:91
+msgid "Geographic longitude in decimal degrees. Range: −180 to +180."
+msgstr ""
+
+#: .\sky_events\apps\station\models.py:94
+msgid "Altitude (m)"
+msgstr "Altitude (m)"
+
+#: .\sky_events\apps\station\models.py:95
+msgid "Elevation above sea level in metres."
+msgstr ""
+
+#: .\sky_events\apps\station\models.py:103
+msgid "Local timezone"
+msgstr "Local timezone"
+
+#: .\sky_events\apps\station\models.py:105
+msgid ""
+"Station's physical timezone — for display only. All stored timestamps are "
+"UTC."
+msgstr ""
+
+#: .\sky_events\apps\station\models.py:124
+msgid "Arbitrary key-value pairs for station-specific configuration."
+msgstr ""
+
+#: .\sky_events\apps\users\admin.py:43
+msgid "Personal info"
+msgstr ""
+
+#: .\sky_events\apps\users\admin.py:56
+msgid "Roles & permissions"
+msgstr ""
+
+#: .\sky_events\apps\users\admin.py:70
+msgid "Dates"
+msgstr ""
+
+#: .\sky_events\apps\users\models.py:51
+msgid "Admin"
+msgstr "Admin"
+
+#: .\sky_events\apps\users\models.py:52
+msgid "Station Owner"
+msgstr "Station Owner"
+
+#: .\sky_events\apps\users\models.py:76
+#: .\sky_events\templates\pages\login.html:48
+msgid "Email address"
+msgstr "Email address"
+
+#: .\sky_events\apps\users\models.py:77
+msgid "Primary login identifier. Must be unique."
+msgstr ""
+
+#: .\sky_events\apps\users\models.py:83
+msgid "Username"
+msgstr "Username"
+
+#: .\sky_events\apps\users\models.py:84
+msgid "Unique display name. Used in UI and mentions."
+msgstr ""
+
+#: .\sky_events\apps\users\models.py:91
+msgid "First name"
+msgstr "First name"
+
+#: .\sky_events\apps\users\models.py:96
+msgid "Last name"
+msgstr "Last name"
+
+#: .\sky_events\apps\users\models.py:103
+msgid "Organisation"
+msgstr "Organisation"
+
+#: .\sky_events\apps\users\models.py:104
+msgid "Optional organisation or institution name."
+msgstr ""
+
+#: .\sky_events\apps\users\models.py:109
+msgid "Country"
+msgstr "Country"
+
+#: .\sky_events\apps\users\models.py:110
+msgid "ISO 3166-1 alpha-2 country code (e.g. 'ES', 'US')."
+msgstr ""
+
+#: .\sky_events\apps\users\models.py:118
+msgid "Timezone"
+msgstr "Timezone"
+
+#: .\sky_events\apps\users\models.py:119
+msgid "User's local timezone for UI display. All data is stored in UTC."
+msgstr ""
+
+#: .\sky_events\apps\users\models.py:128
+msgid "Role"
+msgstr "Role"
+
+#: .\sky_events\apps\users\models.py:129
+msgid "Application role determining access level."
+msgstr ""
+
+#: .\sky_events\apps\users\models.py:135
+msgid "Staff status"
+msgstr "Staff status"
+
+#: .\sky_events\apps\users\models.py:136
+msgid "Designates whether the user can log into the admin site."
+msgstr ""
+
+#: .\sky_events\apps\users\models.py:143
+msgid ""
+"Designates whether this user account should be treated as active. Deactivate "
+"instead of deleting accounts."
+msgstr ""
+
+# ---------------------------------------------------------------------------
+# Users
+# ---------------------------------------------------------------------------
+#: .\sky_events\apps\users\models.py:156
+msgid "User"
+msgstr "User"
+
+#: .\sky_events\apps\users\models.py:157
+#: .\sky_events\templates\components\_sidebar.html:39
+msgid "Users"
+msgstr "Users"
+
+#: .\sky_events\apps\web\apps.py:8
+msgid "Web"
+msgstr ""
+
+#: .\sky_events\apps\web\forms.py:15
+msgid "you@example.com"
+msgstr ""
+
+#: .\sky_events\templates\base.html:21
+msgid ""
+"SkyEvents — Automated meteor detection and astronomical event management "
+"network"
+msgstr ""
+
+#: .\sky_events\templates\base.html:44
+msgid "Skip to main content"
+msgstr ""
+
+#: .\sky_events\templates\components\_footer.html:5
+msgid "Footer"
+msgstr ""
+
+#: .\sky_events\templates\components\_footer.html:15
+msgid ""
+"Automated meteor detection network — coordinating stations, cameras, and "
+"radio receivers worldwide."
+msgstr ""
+
+#: .\sky_events\templates\components\_footer.html:21
+#: .\sky_events\templates\pages\index.html:86
+msgid "Platform"
+msgstr ""
+
+#: .\sky_events\templates\components\_footer.html:23
+msgid "Features"
+msgstr ""
+
+#: .\sky_events\templates\components\_footer.html:24
+#: .\sky_events\templates\components\_navbar.html:39
+#: .\sky_events\templates\pages\index.html:227
+#: .\sky_events\templates\pages\login.html:10
+#: .\sky_events\templates\pages\login.html:96
+msgid "Sign in"
+msgstr ""
+
+#: .\sky_events\templates\components\_footer.html:30
+msgid "Legal"
+msgstr ""
+
+#: .\sky_events\templates\components\_footer.html:32
+msgid "Privacy policy"
+msgstr ""
+
+#: .\sky_events\templates\components\_footer.html:33
+msgid "Terms of service"
+msgstr ""
+
+#: .\sky_events\templates\components\_footer.html:40
+msgid "All rights reserved."
+msgstr ""
+
+#: .\sky_events\templates\components\_footer.html:41
+msgid "Built with"
+msgstr ""
+
+#: .\sky_events\templates\components\_lang_switch.html:6
+msgid "Language"
+msgstr ""
+
+#: .\sky_events\templates\components\_navbar.html:9
+msgid "Main navigation"
+msgstr ""
+
+#: .\sky_events\templates\components\_navbar.html:12
+msgid "Home"
+msgstr ""
+
+#: .\sky_events\templates\components\_navbar.html:32
+#: .\sky_events\templates\components\_sidebar.html:27
+#: .\sky_events\templates\components\_topbar.html:19
+#: .\sky_events\templates\pages\dashboard\admin_home.html:13
+#: .\sky_events\templates\pages\dashboard\owner_home.html:13
+msgid "Dashboard"
+msgstr ""
+
+#: .\sky_events\templates\components\_navbar.html:36
+msgid "Log out"
+msgstr ""
+
+#: .\sky_events\templates\components\_sidebar.html:8
+msgid "Sidebar"
+msgstr ""
+
+#: .\sky_events\templates\components\_sidebar.html:18
+msgid "Dashboard navigation"
+msgstr ""
+
+#: .\sky_events\templates\components\_sidebar.html:32
+#, fuzzy
+#| msgid "Organisation"
+msgid "Administration"
+msgstr "Organisation"
+
+#: .\sky_events\templates\components\_sidebar.html:63
+#: .\sky_events\templates\components\_sidebar.html:88
+#, fuzzy
+#| msgid "Radio receivers"
+msgid "Radio Receivers"
+msgstr "Radio receivers"
+
+#: .\sky_events\templates\components\_sidebar.html:68
+msgid "My Network"
+msgstr ""
+
+#: .\sky_events\templates\components\_sidebar.html:74
+#, fuzzy
+#| msgid "Stations"
+msgid "My Stations"
+msgstr "Stations"
+
+#: .\sky_events\templates\components\_sidebar.html:111
+msgid "Sign out"
+msgstr ""
+
+#: .\sky_events\templates\components\_theme_toggle.html:9
+msgid "Toggle dark mode"
+msgstr ""
+
+#: .\sky_events\templates\components\_topbar.html:12
+msgid "Toggle sidebar"
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\admin_home.html:12
+msgid "Admin Dashboard"
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\admin_home.html:20
+#: .\sky_events\templates\pages\dashboard\owner_home.html:20
+#, python-format
+msgid ""
+"\n"
+"      Welcome, %(name)s\n"
+"    "
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\admin_home.html:25
+msgid "Here's an overview of your entire observation network."
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\admin_home.html:82
+msgid "Quick actions"
+msgstr ""
+
+# ---------------------------------------------------------------------------
+# Stations
+# ---------------------------------------------------------------------------
+#: .\sky_events\templates\pages\dashboard\admin_home.html:90
+#: .\sky_events\templates\pages\dashboard\admin_home.html:123
+#: .\sky_events\templates\pages\dashboard\owner_home.html:84
+#: .\sky_events\templates\pages\dashboard\owner_home.html:99
+#, fuzzy
+#| msgid "Station"
+msgid "Add station"
+msgstr "Station"
+
+#: .\sky_events\templates\pages\dashboard\admin_home.html:96
+msgid "Add user"
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\admin_home.html:102
+msgid "View reports"
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\admin_home.html:111
+#, fuzzy
+#| msgid "Station Owner"
+msgid "Stations overview"
+msgstr "Station Owner"
+
+#: .\sky_events\templates\pages\dashboard\admin_home.html:112
+msgid "View all"
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\admin_home.html:121
+#: .\sky_events\templates\pages\dashboard\owner_home.html:95
+#, fuzzy
+#| msgid "Stations"
+msgid "No stations yet"
+msgstr "Stations"
+
+#: .\sky_events\templates\pages\dashboard\admin_home.html:122
+msgid "Add your first observation station to get started."
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\admin_home.html:139
+#: .\sky_events\templates\pages\dashboard\owner_home.html:116
+msgid "Station list coming soon"
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\owner_home.html:12
+msgid "My Dashboard"
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\owner_home.html:25
+msgid "Manage your observation stations and devices."
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\owner_home.html:41
+#: .\sky_events\templates\pages\dashboard\owner_home.html:79
+#, fuzzy
+#| msgid "Stations"
+msgid "My stations"
+msgstr "Stations"
+
+#: .\sky_events\templates\pages\dashboard\owner_home.html:97
+msgid "Add your first observation station to start monitoring."
+msgstr ""
+
+#: .\sky_events\templates\pages\dashboard\owner_home.html:106
+#, fuzzy
+#| msgid "Station Owner"
+msgid "Station name"
+msgstr "Station Owner"
+
+#: .\sky_events\templates\pages\dashboard\owner_home.html:109
+msgid "Radios"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:13
+msgid "Automated meteor observation network"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:41
+msgid "Meteor detection network"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:45
+msgid "Observe the"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:46
+msgid "cosmos"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:47
+msgid "automatically."
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:51
+msgid ""
+"SkyEvents coordinates your network of stations, cameras, and radio receivers "
+"to detect and classify astronomical events in real time."
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:57
+#: .\sky_events\templates\pages\index.html:223
+msgid "Go to dashboard"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:64
+msgid "Sign in to your account"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:70
+msgid "Learn more"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:88
+msgid "Everything your network needs"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:91
+msgid ""
+"A unified platform for managing multi-station observation infrastructure and "
+"real-time event processing."
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:104
+msgid "Multi-station network"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:106
+msgid ""
+"Manage observation stations across multiple geographic locations from a "
+"single centralised dashboard."
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:117
+msgid "Real-time detection"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:119
+msgid ""
+"Automated pipeline processes optical and radio data to detect and classify "
+"meteor events as they happen."
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:130
+msgid "Optical &amp; radio"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:132
+msgid ""
+"Integrates cameras for optical meteor trails and radio receivers for forward-"
+"scatter radio echoes."
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:143
+msgid "Analytics dashboard"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:145
+msgid ""
+"Rich charts and statistics — event frequency, shower analysis, station "
+"uptime, and device health."
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:156
+msgid "Multilingual"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:158
+msgid ""
+"Full English and Spanish interface with easy extensibility for additional "
+"languages."
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:169
+msgid "Role-based access"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:171
+msgid ""
+"Admins oversee the full network; station owners manage their own equipment "
+"independently."
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:183
+msgid "Platform statistics"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:188
+#, fuzzy
+#| msgid "Organisation"
+msgid "Observation stations"
+msgstr "Organisation"
+
+#: .\sky_events\templates\pages\index.html:192
+#, fuzzy
+#| msgid "Camera model"
+msgid "Cameras supported"
+msgstr "Camera model"
+
+#: .\sky_events\templates\pages\index.html:200
+msgid "Events detected"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:215
+msgid "Ready to join the network?"
+msgstr ""
+
+#: .\sky_events\templates\pages\index.html:218
+msgid "Sign in to access your dashboard and start monitoring your stations."
+msgstr ""
+
+#: .\sky_events\templates\pages\login.html:25
+msgid "Welcome back"
+msgstr ""
+
+#: .\sky_events\templates\pages\login.html:26
+msgid "Sign in to your SkyEvents account"
+msgstr ""
+
+#: .\sky_events\templates\pages\login.html:63
+msgid "Password"
+msgstr ""
+
+#: .\sky_events\templates\pages\login.html:73
+msgid "Show password"
+msgstr ""
+
+# ---------------------------------------------------------------------------
+# Script data (hash_ids, script_token, ScriptDataView)
+# ---------------------------------------------------------------------------
+msgid "Script data"
+msgstr ""
+
+msgid "Script configuration file"
+msgstr ""
+
+msgid "Download script data"
+msgstr ""
+
+msgid "Download .json"
+msgstr ""
+
+msgid "Actions"
+msgstr ""
+
+msgid "What is this file and why is it needed?"
+msgstr ""
+
+msgid "This JSON file must be placed in the same directory as the SkyEvents reporting script on the station owner's computer. The script reads this file at startup to know which station, cameras and radio receivers it is authorised to report events for, and to authenticate with the SkyEvents server."
+msgstr ""
+
+msgid "user_token"
+msgstr ""
+
+msgid "Unique secret that identifies this user's account. Keep it confidential."
+msgstr ""
+
+msgid "hash_id"
+msgstr ""
+
+msgid "Short unique identifier for each device (station / camera / radio). Used for log correlation."
+msgstr ""
+
+msgid "If the user_token is compromised, contact an administrator to regenerate it."
+msgstr ""
+
+msgid "JSON file preview"
+msgstr ""
+
+msgid "Copy"
+msgstr ""
+
+msgid "Copied!"
+msgstr ""
+
+msgid "No cameras or radios registered for this station yet."
+msgstr ""
+
+msgid "This user has no stations yet. Script data will be empty."
+msgstr ""
+
+msgid "Hash ID"
+msgstr ""
+
+msgid "Short unique identifier used in script configuration files."
+msgstr ""
+
+msgid "Script token"
+msgstr ""
+
+msgid "Unique secret token that the reporting script uses to authenticate. Never share this token publicly."
+msgstr ""
+
+msgid "Camera type"
+msgstr ""
+
+msgid "Type of camera: 'Fixed' points to a specific direction (azimuth/elevation required), 'All-sky' covers the full dome (180 °), 'Wide-angle' covers a broad area without full coverage."
+msgstr ""
+
+msgid "Fixed"
+msgstr ""
+
+msgid "All-sky"
+msgstr ""
+
+msgid "Wide-angle"
+msgstr ""
+
+msgid "Azimuth and elevation are required for Fixed cameras."
+msgstr ""

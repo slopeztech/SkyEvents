@@ -1,0 +1,270 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block topbar_title %}{% trans "Events" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-center justify-between">
+  <div>
+    <h2 class="page-title">{{ page_title }}</h2>
+  </div>
+  <a href="{% url 'events:list' %}" class="btn-ghost btn-sm flex items-center gap-1">
+    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd"/>
+    </svg>
+    {% trans "Back to list" %}
+  </a>
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300 space-y-1">
+      {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-2 space-y-6">
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Identity" %}</h3></div>
+        <div class="card-body space-y-4">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.code.id_for_label }}" class="event-form-label">
+                {{ form.code.label }}
+                <span class="text-red-500 ml-0.5" aria-hidden="true">*</span>
+              </label>
+              <input type="text" name="code" id="{{ form.code.id_for_label }}"
+                     value="{{ form.code.value|default:'' }}"
+                     placeholder="SE-2026-001"
+                     class="event-form-input{% if form.code.errors %} event-form-input-error{% endif %}"
+                     required>
+              {% for err in form.code.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+            </div>
+
+            <div>
+              <label for="{{ form.name.id_for_label }}" class="event-form-label">
+                {{ form.name.label }}
+                <span class="text-red-500 ml-0.5" aria-hidden="true">*</span>
+              </label>
+              <input type="text" name="name" id="{{ form.name.id_for_label }}"
+                     value="{{ form.name.value|default:'' }}"
+                     class="event-form-input{% if form.name.errors %} event-form-input-error{% endif %}"
+                     required>
+              {% for err in form.name.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.event_type.id_for_label }}" class="event-form-label">{{ form.event_type.label }}</label>
+              <select name="event_type" id="{{ form.event_type.id_for_label }}"
+                      class="event-form-select{% if form.event_type.errors %} event-form-input-error{% endif %}">
+                {% for val, label in form.fields.event_type.choices %}
+                  <option value="{{ val }}"{% if form.event_type.value == val %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              {% for err in form.event_type.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+            </div>
+
+            <div>
+              <label for="{{ form.status.id_for_label }}" class="event-form-label">{{ form.status.label }}</label>
+              <select name="status" id="{{ form.status.id_for_label }}"
+                      class="event-form-select{% if form.status.errors %} event-form-input-error{% endif %}">
+                {% for val, label in form.fields.status.choices %}
+                  <option value="{{ val }}"{% if form.status.value == val %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              {% for err in form.status.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Timing" %}</h3></div>
+        <div class="card-body grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.detected_at.id_for_label }}" class="event-form-label">
+              {{ form.detected_at.label }}
+              <span class="text-red-500 ml-0.5" aria-hidden="true">*</span>
+            </label>
+            <input type="datetime-local" name="detected_at" id="{{ form.detected_at.id_for_label }}"
+                   value="{{ form.detected_at.value|default:'' }}"
+                   class="event-form-input{% if form.detected_at.errors %} event-form-input-error{% endif %}"
+                   required>
+            {% for err in form.detected_at.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.duration_ms.id_for_label }}" class="event-form-label">{{ form.duration_ms.label }}</label>
+            <input type="number" name="duration_ms" id="{{ form.duration_ms.id_for_label }}"
+                   value="{{ form.duration_ms.value|default:'' }}" min="0"
+                   class="event-form-input{% if form.duration_ms.errors %} event-form-input-error{% endif %}">
+            {% for err in form.duration_ms.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Measurements" %}</h3></div>
+        <div class="card-body grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label for="{{ form.peak_magnitude.id_for_label }}" class="event-form-label">{{ form.peak_magnitude.label }}</label>
+            <input type="number" name="peak_magnitude" id="{{ form.peak_magnitude.id_for_label }}"
+                   value="{{ form.peak_magnitude.value|default:'' }}" step="0.01"
+                   class="event-form-input{% if form.peak_magnitude.errors %} event-form-input-error{% endif %}">
+            {% for err in form.peak_magnitude.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.altitude_km.id_for_label }}" class="event-form-label">{{ form.altitude_km.label }}</label>
+            <input type="number" name="altitude_km" id="{{ form.altitude_km.id_for_label }}"
+                   value="{{ form.altitude_km.value|default:'' }}" step="0.01" min="0"
+                   class="event-form-input{% if form.altitude_km.errors %} event-form-input-error{% endif %}">
+            {% for err in form.altitude_km.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.velocity_km_s.id_for_label }}" class="event-form-label">{{ form.velocity_km_s.label }}</label>
+            <input type="number" name="velocity_km_s" id="{{ form.velocity_km_s.id_for_label }}"
+                   value="{{ form.velocity_km_s.value|default:'' }}" step="0.01" min="0"
+                   class="event-form-input{% if form.velocity_km_s.errors %} event-form-input-error{% endif %}">
+            {% for err in form.velocity_km_s.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Narrative" %}</h3></div>
+        <div class="card-body space-y-4">
+          <div>
+            <label for="{{ form.description.id_for_label }}" class="event-form-label">{{ form.description.label }}</label>
+            <textarea name="description" id="{{ form.description.id_for_label }}" rows="4"
+                      class="event-form-input{% if form.description.errors %} event-form-input-error{% endif %}">{{ form.description.value|default:'' }}</textarea>
+            {% for err in form.description.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.notes.id_for_label }}" class="event-form-label">
+              {{ form.notes.label }}
+              <span class="ml-1 text-xs text-amber-500">({% trans "admin only" %})</span>
+            </label>
+            <textarea name="notes" id="{{ form.notes.id_for_label }}" rows="3"
+                      class="event-form-input{% if form.notes.errors %} event-form-input-error{% endif %}">{{ form.notes.value|default:'' }}</textarea>
+            {% for err in form.notes.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="space-y-6">
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Stations" %}</h3></div>
+        <div class="card-body">
+          {% if form.fields.stations.queryset.exists %}
+            <ul class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+              {% for choice in form.stations %}
+                <li class="flex items-center gap-2.5 text-sm">
+                  {{ choice.tag }}
+                  <label for="{{ choice.id_for_label }}"
+                         class="text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    {{ choice.choice_label }}
+                  </label>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-sm text-slate-400">{% trans "No stations registered yet." %}</p>
+          {% endif %}
+          {% for err in form.stations.errors %}<p class="event-form-error mt-2">{{ err }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Cameras" %}</h3></div>
+        <div class="card-body">
+          {% if form.fields.cameras.queryset.exists %}
+            <ul class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+              {% for choice in form.cameras %}
+                <li class="flex items-center gap-2.5 text-sm">
+                  {{ choice.tag }}
+                  <label for="{{ choice.id_for_label }}"
+                         class="text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    {{ choice.choice_label }}
+                  </label>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-sm text-slate-400">{% trans "No cameras registered yet." %}</p>
+          {% endif %}
+          {% for err in form.cameras.errors %}<p class="event-form-error mt-2">{{ err }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Radio receivers" %}</h3></div>
+        <div class="card-body">
+          {% if form.fields.radio_receivers.queryset.exists %}
+            <ul class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+              {% for choice in form.radio_receivers %}
+                <li class="flex items-center gap-2.5 text-sm">
+                  {{ choice.tag }}
+                  <label for="{{ choice.id_for_label }}"
+                         class="text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    {{ choice.choice_label }}
+                  </label>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-sm text-slate-400">{% trans "No radio receivers registered yet." %}</p>
+          {% endif %}
+          {% for err in form.radio_receivers.errors %}<p class="event-form-error mt-2">{{ err }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">{% trans "Linked notices" %}</h3>
+          <span class="text-xs text-slate-400 italic">{% trans "public reports" %}</span>
+        </div>
+        <div class="card-body">
+          {% if form.fields.notices.queryset.exists %}
+            <ul class="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {% for choice in form.notices %}
+                <li class="flex items-start gap-2.5 text-sm">
+                  <div class="mt-0.5">{{ choice.tag }}</div>
+                  <label for="{{ choice.id_for_label }}" class="cursor-pointer select-none space-y-0.5">
+                    <p class="text-slate-700 dark:text-slate-300 font-medium leading-tight">{{ choice.choice_label }}</p>
+                  </label>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-sm text-slate-400">{% trans "No notices available to link." %}</p>
+          {% endif %}
+          {% for err in form.notices.errors %}<p class="event-form-error mt-2">{{ err }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <div class="sticky bottom-6">
+        <button type="submit" class="btn-primary w-full justify-center">
+          {{ submit_label }}
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</form>
+
+{% endblock %}

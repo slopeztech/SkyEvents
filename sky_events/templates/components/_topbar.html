@@ -1,0 +1,36 @@
+{% load i18n %}
+
+<header class="topbar" role="banner">
+  <div class="flex items-center gap-3">
+    {# Mobile sidebar toggle #}
+    <button id="sidebar-toggle"
+            type="button"
+            class="btn-icon md:hidden"
+            aria-label="{% trans "Toggle sidebar" %}">
+      <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd"
+              d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 10.5a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Z"
+              clip-rule="evenodd"/>
+      </svg>
+    </button>
+    <h1 class="topbar-title">{% block topbar_title %}{% trans "Dashboard" %}{% endblock %}</h1>
+  </div>
+
+  <div class="topbar-actions">
+    {# Page-level action button / dropdown #}
+    {% block topbar_actions %}{% endblock %}
+    {# Language switcher #}
+    {% include "components/_lang_switch.html" %}
+
+    {# Theme toggle #}
+    {% include "components/_theme_toggle.html" %}
+
+    {# User avatar pill #}
+    <div class="flex items-center gap-2">
+      <span class="avatar-sm" aria-hidden="true">{{ request.user.email|first|upper }}</span>
+      <span class="hidden sm:block text-sm font-medium text-slate-700 dark:text-slate-200 max-w-[140px] truncate">
+        {{ request.user.get_full_name|default:request.user.email }}
+      </span>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,103 @@
+# =============================================================================
+# pre-commit configuration for SkyEvents
+#
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+#
+# Hooks run in this order:
+#   1. General file hygiene (trailing whitespace, YAML, etc.)
+#   2. Security (detect-secrets, bandit)
+#   3. Formatting (black, ruff)
+#   4. Linting (ruff, mypy)
+#   5. Django checks
+# =============================================================================
+
+repos:
+  # ---------------------------------------------------------------------------
+  # General file hygiene
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=1000"]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: debug-statements
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+      - id: no-commit-to-branch
+        args: ["--branch", "main", "--branch", "master", "--branch", "production"]
+
+  # ---------------------------------------------------------------------------
+  # Security — detect secrets
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: package.lock.json
+
+  # ---------------------------------------------------------------------------
+  # Python formatting — Black
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3.12
+
+  # ---------------------------------------------------------------------------
+  # Python linting + formatting — Ruff
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: ["--fix", "--exit-non-zero-on-fix"]
+      # Run the formatter
+      - id: ruff-format
+
+  # ---------------------------------------------------------------------------
+  # Type checking — mypy
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - django-stubs
+          - djangorestframework-stubs
+          - types-redis
+        args: ["--config-file=pyproject.toml"]
+        exclude: "migrations/"
+
+  # ---------------------------------------------------------------------------
+  # Commit message format — Conventional Commits
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.6.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args:
+          - feat
+          - fix
+          - docs
+          - style
+          - refactor
+          - perf
+          - test
+          - build
+          - ci
+          - chore
+          - revert

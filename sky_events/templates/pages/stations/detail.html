@@ -1,0 +1,215 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{{ station.name }}{% endblock %}
+{% block topbar_title %}{% trans "Station detail" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-start justify-between">
+  <div>
+    <p class="text-xs font-mono text-indigo-500 dark:text-indigo-400 mb-1">{{ station.code }}</p>
+    <h2 class="page-title">{{ station.name }}</h2>
+    <p class="page-subtitle">{{ station.owner.get_full_name }} &middot; {{ station.get_status_display }}</p>
+  </div>
+  <div class="flex items-center gap-2 flex-shrink-0">
+    <a href="{% url 'station:edit' station.code %}" class="btn-ghost btn-sm">{% trans "Edit" %}</a>
+    <a href="{% url 'station:delete' station.code %}" class="btn-ghost btn-sm text-red-500 hover:text-red-700">{% trans "Delete" %}</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <div class="lg:col-span-2 space-y-6">
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Information" %}</h3>
+        {% if station.status == 'active' %}
+          <span class="badge badge-green"><span class="dot-green"></span>{{ station.get_status_display }}</span>
+        {% elif station.status == 'maintenance' %}
+          <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ station.get_status_display }}</span>
+        {% else %}
+          <span class="badge badge-red"><span class="dot-red"></span>{{ station.get_status_display }}</span>
+        {% endif %}
+      </div>
+      <div class="card-body grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Owner" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ station.owner.get_full_name }}</p>
+          <p class="text-xs text-slate-400">{{ station.owner.email }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Latitude" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ station.latitude }}°</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Longitude" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ station.longitude }}°</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Altitude" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ station.altitude_m }} m</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Timezone" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ station.timezone }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Registered" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ station.created_at|date:"Y-m-d" }}</p>
+        </div>
+      </div>
+      {% if station.description %}
+        <div class="px-5 pb-4 text-sm text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-700 pt-4">
+          {{ station.description|linebreaksbr }}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Cameras" %}</h3>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-slate-400">{{ station.cameras.count }}</span>
+          <a href="{% url 'camera:create' %}?station={{ station.code }}" class="btn-ghost btn-xs flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
+            </svg>
+            {% trans "Add" %}
+          </a>
+        </div>
+      </div>
+      {% if station.cameras.exists %}
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{% trans "Name" %}</th>
+                <th>{% trans "Code" %}</th>
+                <th>{% trans "Model" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cam in station.cameras.all %}
+                <tr>
+                  <td class="font-medium text-slate-900 dark:text-slate-100">
+                    <a href="{% url 'camera:detail' cam.code %}" class="hover:text-indigo-600 dark:hover:text-indigo-400">{{ cam.name }}</a>
+                  </td>
+                  <td class="font-mono text-xs text-slate-500">{{ cam.code }}</td>
+                  <td class="text-slate-500 text-sm">{{ cam.model_name|default:"—" }}</td>
+                  <td>
+                    {% if cam.status == 'active' %}
+                      <span class="badge badge-green"><span class="dot-green"></span>{{ cam.get_status_display }}</span>
+                    {% elif cam.status == 'maintenance' %}
+                      <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ cam.get_status_display }}</span>
+                    {% else %}
+                      <span class="badge badge-red"><span class="dot-red"></span>{{ cam.get_status_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'camera:edit' cam.code %}" class="btn-ghost btn-xs">{% trans "Edit" %}</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="card-body">
+          <p class="text-sm text-slate-400">{% trans "No cameras registered." %}</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Radio receivers" %}</h3>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-slate-400">{{ station.radio_receivers.count }}</span>
+          <a href="{% url 'radio:create' %}?station={{ station.code }}" class="btn-ghost btn-xs flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
+            </svg>
+            {% trans "Add" %}
+          </a>
+        </div>
+      </div>
+      {% if station.radio_receivers.exists %}
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{% trans "Name" %}</th>
+                <th>{% trans "Code" %}</th>
+                <th>{% trans "Frequency" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for radio in station.radio_receivers.all %}
+                <tr>
+                  <td class="font-medium text-slate-900 dark:text-slate-100">
+                    <a href="{% url 'radio:detail' radio.code %}" class="hover:text-indigo-600 dark:hover:text-indigo-400">{{ radio.name }}</a>
+                  </td>
+                  <td class="font-mono text-xs text-slate-500">{{ radio.code }}</td>
+                  <td class="tabular-nums text-sm">{{ radio.frequency_mhz }} MHz</td>
+                  <td>
+                    {% if radio.status == 'active' %}
+                      <span class="badge badge-green"><span class="dot-green"></span>{{ radio.get_status_display }}</span>
+                    {% elif radio.status == 'maintenance' %}
+                      <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ radio.get_status_display }}</span>
+                    {% else %}
+                      <span class="badge badge-red"><span class="dot-red"></span>{{ radio.get_status_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'radio:edit' radio.code %}" class="btn-ghost btn-xs">{% trans "Edit" %}</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="card-body">
+          <p class="text-sm text-slate-400">{% trans "No radio receivers registered." %}</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <div class="space-y-6">
+
+    <div class="card">
+      <div class="card-body text-xs text-slate-400 space-y-1.5">
+        <p>{% trans "Code" %}: <span class="font-mono text-slate-600 dark:text-slate-300">{{ station.code }}</span></p>
+        <p>{% trans "Cameras" %}: <span class="text-slate-600 dark:text-slate-300">{{ station.cameras.count }}</span></p>
+        <p>{% trans "Radio receivers" %}: <span class="text-slate-600 dark:text-slate-300">{{ station.radio_receivers.count }}</span></p>
+        <p>{% trans "Created" %}: {{ station.created_at|date:"Y-m-d H:i" }} UTC</p>
+        <p>{% trans "Updated" %}: {{ station.updated_at|date:"Y-m-d H:i" }} UTC</p>
+      </div>
+    </div>
+
+    <div class="card border-red-200 dark:border-red-800/50">
+      <div class="card-header">
+        <h3 class="card-title text-red-600 dark:text-red-400">{% trans "Danger zone" %}</h3>
+      </div>
+      <div class="card-body space-y-2">
+        <p class="text-xs text-slate-500">{% trans "Deleting a station permanently removes all its cameras and radio receivers." %}</p>
+        <a href="{% url 'station:delete' station.code %}"
+           class="btn-ghost btn-sm w-full justify-center text-red-600 hover:text-red-700 border border-red-200 dark:border-red-800">
+          {% trans "Delete station" %}
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

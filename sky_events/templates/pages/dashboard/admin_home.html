@@ -1,0 +1,36 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Admin Dashboard" %}{% endblock %}
+{% block topbar_title %}{% trans "Dashboard" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h2 class="page-title">
+    {% blocktrans with name=request.user.get_full_name|default:request.user.email trimmed %}Bienvenido, {{ name }}{% endblocktrans %}
+  </h2>
+  <p class="page-subtitle">{% trans "Resumen global de la red de observación." %}</p>
+</div>
+
+<div class="space-y-8">
+
+  {% include "components/dashboard/_stat_cards.html" %}
+
+  {% include "components/dashboard/_nav_grid.html" %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-2">
+      {% include "components/dashboard/_recent_stations.html" %}
+    </div>
+
+    <div class="lg:col-span-1">
+      {% include "components/dashboard/_notices.html" %}
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

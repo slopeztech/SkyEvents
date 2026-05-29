@@ -1,0 +1,138 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{{ camera.name }}{% endblock %}
+{% block topbar_title %}{% trans "Camera detail" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-start justify-between">
+  <div>
+    <p class="text-xs font-mono text-indigo-500 dark:text-indigo-400 mb-1">{{ camera.code }}</p>
+    <h2 class="page-title">{{ camera.name }}</h2>
+    <p class="page-subtitle">
+      <a href="{% url 'station:detail' camera.station.code %}" class="hover:underline">{{ camera.station.name }}</a>
+      &middot; {{ camera.get_status_display }}
+    </p>
+  </div>
+  <div class="flex items-center gap-2 flex-shrink-0">
+    <a href="{% url 'camera:edit' camera.code %}" class="btn-ghost btn-sm">{% trans "Edit" %}</a>
+    <a href="{% url 'camera:delete' camera.code %}" class="btn-ghost btn-sm text-red-500 hover:text-red-700">{% trans "Delete" %}</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <div class="lg:col-span-2 space-y-6">
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Identity" %}</h3>
+        {% if camera.status == 'active' %}
+          <span class="badge badge-green"><span class="dot-green"></span>{{ camera.get_status_display }}</span>
+        {% elif camera.status == 'maintenance' %}
+          <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ camera.get_status_display }}</span>
+        {% else %}
+          <span class="badge badge-red"><span class="dot-red"></span>{{ camera.get_status_display }}</span>
+        {% endif %}
+      </div>
+      <div class="card-body grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Name" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ camera.name }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Code" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 font-mono">{{ camera.code }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Installed" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ camera.installed_at|default:"—" }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">{% trans "Hardware" %}</h3></div>
+      <div class="card-body grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Model" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ camera.model_name|default:"—" }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Sensor type" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ camera.sensor_type|default:"—" }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Resolution" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">
+            {% if camera.resolution_width and camera.resolution_height %}{{ camera.resolution_width }}×{{ camera.resolution_height }} px{% else %}—{% endif %}
+          </p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "FPS" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ camera.fps|default:"—" }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">{% trans "Optics &amp; pointing" %}</h3></div>
+      <div class="card-body grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Field of view" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{% if camera.field_of_view_deg %}{{ camera.field_of_view_deg }}°{% else %}—{% endif %}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Focal length" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{% if camera.lens_mm %}{{ camera.lens_mm }} mm{% else %}—{% endif %}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Azimuth" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{% if camera.azimuth_deg %}{{ camera.azimuth_deg }}°{% else %}—{% endif %}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Elevation" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{% if camera.elevation_deg %}{{ camera.elevation_deg }}°{% else %}—{% endif %}</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="space-y-6">
+
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">{% trans "Station" %}</h3></div>
+      <div class="card-body text-sm space-y-2">
+        <p class="font-medium text-slate-800 dark:text-slate-200">
+          <a href="{% url 'station:detail' camera.station.code %}" class="hover:text-indigo-600 dark:hover:text-indigo-400">{{ camera.station.name }}</a>
+        </p>
+        <p class="text-xs text-slate-400 font-mono">{{ camera.station.code }}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body text-xs text-slate-400 space-y-1.5">
+        <p>{% trans "Created" %}: {{ camera.created_at|date:"Y-m-d H:i" }} UTC</p>
+        <p>{% trans "Updated" %}: {{ camera.updated_at|date:"Y-m-d H:i" }} UTC</p>
+      </div>
+    </div>
+
+    <div class="card border-red-200 dark:border-red-800/50">
+      <div class="card-header">
+        <h3 class="card-title text-red-600 dark:text-red-400">{% trans "Danger zone" %}</h3>
+      </div>
+      <div class="card-body">
+        <a href="{% url 'camera:delete' camera.code %}"
+           class="btn-ghost btn-sm w-full justify-center text-red-600 hover:text-red-700 border border-red-200 dark:border-red-800">
+          {% trans "Delete camera" %}
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,234 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block topbar_title %}{% trans "Cameras" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-center justify-between">
+  <h2 class="page-title">{{ page_title }}</h2>
+  <a href="{% url 'camera:list' %}" class="btn-ghost btn-sm flex items-center gap-1">
+    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd"/>
+    </svg>
+    {% trans "Back to list" %}
+  </a>
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300 space-y-1">
+      {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-2 space-y-6">
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Identity" %}</h3></div>
+        <div class="card-body space-y-4">
+          <div>
+            <label for="{{ form.station.id_for_label }}" class="event-form-label">
+              {{ form.station.label }}<span class="text-red-500 ml-0.5">*</span>
+            </label>
+            <select name="station" id="{{ form.station.id_for_label }}"
+                    class="event-form-select{% if form.station.errors %} event-form-input-error{% endif %}">
+              {% for val, label in form.fields.station.choices %}
+                <option value="{{ val }}"{% if form.station.value|stringformat:"s" == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            {% for err in form.station.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.name.id_for_label }}" class="event-form-label">
+                {{ form.name.label }}<span class="text-red-500 ml-0.5">*</span>
+              </label>
+              <input type="text" name="name" id="{{ form.name.id_for_label }}"
+                     value="{{ form.name.value|default:'' }}"
+                     class="event-form-input{% if form.name.errors %} event-form-input-error{% endif %}" required>
+              {% for err in form.name.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+            </div>
+            <div>
+              <label for="{{ form.code.id_for_label }}" class="event-form-label">
+                {{ form.code.label }}<span class="text-red-500 ml-0.5">*</span>
+              </label>
+              <input type="text" name="code" id="{{ form.code.id_for_label }}"
+                     value="{{ form.code.value|default:'' }}"
+                     class="event-form-input font-mono{% if form.code.errors %} event-form-input-error{% endif %}" required>
+              {% for err in form.code.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+            </div>
+          </div>
+          <div>
+            <label for="{{ form.camera_type.id_for_label }}" class="event-form-label">
+              {{ form.camera_type.label }}<span class="text-red-500 ml-0.5">*</span>
+            </label>
+            <select name="camera_type" id="{{ form.camera_type.id_for_label }}"
+                    class="event-form-select{% if form.camera_type.errors %} event-form-input-error{% endif %}">
+              {% for val, label in form.fields.camera_type.choices %}
+                <option value="{{ val }}"{% if form.camera_type.value == val %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            {% for err in form.camera_type.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Hardware" %}</h3></div>
+        <div class="card-body grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.model_name.id_for_label }}" class="event-form-label">{{ form.model_name.label }}</label>
+            <input type="text" name="model_name" id="{{ form.model_name.id_for_label }}"
+                   value="{{ form.model_name.value|default:'' }}"
+                   class="event-form-input{% if form.model_name.errors %} event-form-input-error{% endif %}">
+            {% for err in form.model_name.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.sensor_type.id_for_label }}" class="event-form-label">{{ form.sensor_type.label }}</label>
+            <input type="text" name="sensor_type" id="{{ form.sensor_type.id_for_label }}"
+                   value="{{ form.sensor_type.value|default:'' }}"
+                   class="event-form-input{% if form.sensor_type.errors %} event-form-input-error{% endif %}">
+            {% for err in form.sensor_type.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.resolution_width.id_for_label }}" class="event-form-label">{{ form.resolution_width.label }}</label>
+            <input type="number" name="resolution_width" id="{{ form.resolution_width.id_for_label }}"
+                   value="{{ form.resolution_width.value|default:'' }}" min="1"
+                   class="event-form-input{% if form.resolution_width.errors %} event-form-input-error{% endif %}">
+            {% for err in form.resolution_width.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.resolution_height.id_for_label }}" class="event-form-label">{{ form.resolution_height.label }}</label>
+            <input type="number" name="resolution_height" id="{{ form.resolution_height.id_for_label }}"
+                   value="{{ form.resolution_height.value|default:'' }}" min="1"
+                   class="event-form-input{% if form.resolution_height.errors %} event-form-input-error{% endif %}">
+            {% for err in form.resolution_height.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.fps.id_for_label }}" class="event-form-label">{{ form.fps.label }}</label>
+            <input type="number" name="fps" id="{{ form.fps.id_for_label }}"
+                   value="{{ form.fps.value|default:'' }}" min="1" step="0.1"
+                   class="event-form-input{% if form.fps.errors %} event-form-input-error{% endif %}">
+            {% for err in form.fps.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="space-y-6">
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Optics" %}</h3></div>
+        <div class="card-body space-y-4">
+          <div>
+            <label for="{{ form.field_of_view_deg.id_for_label }}" class="event-form-label">{{ form.field_of_view_deg.label }}</label>
+            <input type="number" name="field_of_view_deg" id="{{ form.field_of_view_deg.id_for_label }}"
+                   value="{{ form.field_of_view_deg.value|default:'' }}" step="0.1" min="0" max="360"
+                   class="event-form-input{% if form.field_of_view_deg.errors %} event-form-input-error{% endif %}">
+            {% for err in form.field_of_view_deg.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.lens_mm.id_for_label }}" class="event-form-label">{{ form.lens_mm.label }}</label>
+            <input type="number" name="lens_mm" id="{{ form.lens_mm.id_for_label }}"
+                   value="{{ form.lens_mm.value|default:'' }}" step="0.1" min="0"
+                   class="event-form-input{% if form.lens_mm.errors %} event-form-input-error{% endif %}">
+            {% for err in form.lens_mm.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="pointing-card">
+        <div class="card-header">
+          <h3 class="card-title">{% trans "Pointing" %}</h3>
+        </div>
+        <div class="card-body space-y-4">
+          <p class="text-xs text-slate-500 dark:text-slate-400" id="pointing-hint-fixed">
+            {% trans "Azimuth: 0° = North, clockwise. Elevation: 0° = horizon, 90° = zenith." %}
+          </p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 hidden" id="pointing-hint-other">
+            {% trans "Azimuth and elevation are optional for this camera type." %}
+          </p>
+          <div>
+            <label for="{{ form.azimuth_deg.id_for_label }}" class="event-form-label" id="azimuth-label">
+              {{ form.azimuth_deg.label }}<span class="text-red-500 ml-0.5" id="azimuth-required">*</span>
+            </label>
+            <input type="number" name="azimuth_deg" id="{{ form.azimuth_deg.id_for_label }}"
+                   value="{{ form.azimuth_deg.value|default:'' }}" step="0.01" min="0" max="360"
+                   class="event-form-input{% if form.azimuth_deg.errors %} event-form-input-error{% endif %}">
+            {% for err in form.azimuth_deg.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.elevation_deg.id_for_label }}" class="event-form-label" id="elevation-label">
+              {{ form.elevation_deg.label }}<span class="text-red-500 ml-0.5" id="elevation-required">*</span>
+            </label>
+            <input type="number" name="elevation_deg" id="{{ form.elevation_deg.id_for_label }}"
+                   value="{{ form.elevation_deg.value|default:'' }}" step="0.01" min="-90" max="90"
+                   class="event-form-input{% if form.elevation_deg.errors %} event-form-input-error{% endif %}">
+            {% for err in form.elevation_deg.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Status" %}</h3></div>
+        <div class="card-body space-y-4">
+          <div>
+            <label for="{{ form.status.id_for_label }}" class="event-form-label">{{ form.status.label }}</label>
+            <select name="status" id="{{ form.status.id_for_label }}"
+                    class="event-form-select{% if form.status.errors %} event-form-input-error{% endif %}">
+              {% for val, label in form.fields.status.choices %}
+                <option value="{{ val }}"{% if form.status.value == val %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            {% for err in form.status.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.installed_at.id_for_label }}" class="event-form-label">{{ form.installed_at.label }}</label>
+            <input type="date" name="installed_at" id="{{ form.installed_at.id_for_label }}"
+                   value="{{ form.installed_at.value|default:'' }}"
+                   class="event-form-input{% if form.installed_at.errors %} event-form-input-error{% endif %}">
+            {% for err in form.installed_at.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="sticky bottom-6">
+        <button type="submit" class="btn-primary w-full justify-center">{{ submit_label }}</button>
+      </div>
+
+    </div>
+
+  </div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var typeSelect   = document.getElementById("id_camera_type");
+  var hintFixed    = document.getElementById("pointing-hint-fixed");
+  var hintOther    = document.getElementById("pointing-hint-other");
+  var reqAzimuth   = document.getElementById("azimuth-required");
+  var reqElevation = document.getElementById("elevation-required");
+
+  function update() {
+    var isFixed = typeSelect.value === "fixed";
+    hintFixed.classList.toggle("hidden", !isFixed);
+    hintOther.classList.toggle("hidden",  isFixed);
+    reqAzimuth.classList.toggle("hidden",   !isFixed);
+    reqElevation.classList.toggle("hidden", !isFixed);
+  }
+
+  typeSelect.addEventListener("change", update);
+  update(); // apply on page load (e.g. editing an existing camera)
+})();
+</script>
+{% endblock %}

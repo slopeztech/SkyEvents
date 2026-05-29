@@ -1,0 +1,167 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block topbar_title %}{% trans "Reports" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-center justify-between">
+  <div>
+    <h2 class="page-title">{{ page_title }}</h2>
+  </div>
+  <a href="{% url 'reports:list' %}" class="btn-ghost btn-sm flex items-center gap-1">
+    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd"/>
+    </svg>
+    {% trans "Back to list" %}
+  </a>
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300 space-y-1">
+      {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-2 space-y-6">
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Origin" %}</h3></div>
+        <div class="card-body space-y-4">
+
+          <div>
+            <label for="{{ form.station.id_for_label }}" class="event-form-label">
+              {{ form.station.label }}
+              <span class="text-red-500 ml-0.5" aria-hidden="true">*</span>
+            </label>
+            <select name="station" id="{{ form.station.id_for_label }}"
+                    class="event-form-select{% if form.station.errors %} event-form-input-error{% endif %}"
+                    required>
+              <option value="">—</option>
+              {% for val, label in form.fields.station.choices %}
+                {% if val %}
+                  <option value="{{ val }}"{% if form.station.value == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+            {% for err in form.station.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.camera.id_for_label }}" class="event-form-label">{{ form.camera.label }}</label>
+              <select name="camera" id="{{ form.camera.id_for_label }}"
+                      class="event-form-select{% if form.camera.errors %} event-form-input-error{% endif %}">
+                <option value="">{{ form.fields.camera.empty_label }}</option>
+                {% for val, label in form.fields.camera.choices %}
+                  {% if val %}
+                    <option value="{{ val }}"{% if form.camera.value == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+              {% for err in form.camera.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+            </div>
+            <div>
+              <label for="{{ form.radio_receiver.id_for_label }}" class="event-form-label">{{ form.radio_receiver.label }}</label>
+              <select name="radio_receiver" id="{{ form.radio_receiver.id_for_label }}"
+                      class="event-form-select{% if form.radio_receiver.errors %} event-form-input-error{% endif %}">
+                <option value="">{{ form.fields.radio_receiver.empty_label }}</option>
+                {% for val, label in form.fields.radio_receiver.choices %}
+                  {% if val %}
+                    <option value="{{ val }}"{% if form.radio_receiver.value == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+              {% for err in form.radio_receiver.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Detection" %}</h3></div>
+        <div class="card-body grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.recorded_at.id_for_label }}" class="event-form-label">
+              {{ form.recorded_at.label }}
+              <span class="text-red-500 ml-0.5" aria-hidden="true">*</span>
+            </label>
+            <input type="datetime-local" name="recorded_at" id="{{ form.recorded_at.id_for_label }}"
+                   value="{{ form.recorded_at.value|default:'' }}"
+                   class="event-form-input{% if form.recorded_at.errors %} event-form-input-error{% endif %}"
+                   required>
+            {% for err in form.recorded_at.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.duration_ms.id_for_label }}" class="event-form-label">{{ form.duration_ms.label }}</label>
+            <input type="number" name="duration_ms" id="{{ form.duration_ms.id_for_label }}"
+                   value="{{ form.duration_ms.value|default:'' }}" min="0"
+                   class="event-form-input{% if form.duration_ms.errors %} event-form-input-error{% endif %}">
+            {% for err in form.duration_ms.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Notes" %}</h3></div>
+        <div class="card-body">
+          <textarea name="notes" id="{{ form.notes.id_for_label }}"
+                    rows="4"
+                    placeholder="{% trans "Optional notes…" %}"
+                    class="event-form-input{% if form.notes.errors %} event-form-input-error{% endif %}">{{ form.notes.value|default:'' }}</textarea>
+          {% for err in form.notes.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    <div class="space-y-6">
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Status" %}</h3></div>
+        <div class="card-body space-y-4">
+          <div>
+            <label for="{{ form.status.id_for_label }}" class="event-form-label">{{ form.status.label }}</label>
+            <select name="status" id="{{ form.status.id_for_label }}"
+                    class="event-form-select{% if form.status.errors %} event-form-input-error{% endif %}">
+              {% for val, label in form.fields.status.choices %}
+                <option value="{{ val }}"{% if form.status.value == val %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            {% for err in form.status.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.event.id_for_label }}" class="event-form-label">{{ form.event.label }}</label>
+            <select name="event" id="{{ form.event.id_for_label }}"
+                    class="event-form-select{% if form.event.errors %} event-form-input-error{% endif %}">
+              <option value="">{{ form.fields.event.empty_label }}</option>
+              {% for val, label in form.fields.event.choices %}
+                {% if val %}
+                  <option value="{{ val }}"{% if form.event.value == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+            {% for err in form.event.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <button type="submit" class="btn-primary btn-sm w-full">{{ submit_label }}</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</form>
+
+{% endblock %}

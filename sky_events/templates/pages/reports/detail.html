@@ -1,0 +1,228 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Report detail" %}{% endblock %}
+{% block topbar_title %}{% trans "Report detail" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-start justify-between">
+  <div>
+    <p class="text-xs font-mono text-indigo-500 dark:text-indigo-400 mb-1">{{ report.station.name }}</p>
+    <h2 class="page-title">
+      {% if report.camera %}{{ report.camera.name }}{% elif report.radio_receiver %}{{ report.radio_receiver.name }}{% else %}{% trans "Unknown device" %}{% endif %}
+    </h2>
+    <p class="page-subtitle">{{ report.recorded_at|date:"Y-m-d H:i:s" }} UTC</p>
+  </div>
+  {% if request.user.role == 'admin' %}
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <a href="{% url 'reports:edit' report.pk %}" class="btn-ghost btn-sm">{% trans "Edit" %}</a>
+      <a href="{% url 'reports:delete' report.pk %}" class="btn-ghost btn-sm text-red-500 hover:text-red-700">{% trans "Delete" %}</a>
+    </div>
+  {% endif %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <div class="lg:col-span-2 space-y-6">
+
+    {# ── Overview card ──────────────────────────────────────────────────── #}
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Overview" %}</h3>
+        {% if report.status == 'linked' %}
+          <span class="badge badge-green"><span class="dot-green"></span>{{ report.get_status_display }}</span>
+        {% elif report.status == 'archived' %}
+          <span class="badge"><span class="dot"></span>{{ report.get_status_display }}</span>
+        {% else %}
+          <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ report.get_status_display }}</span>
+        {% endif %}
+      </div>
+      <div class="card-body grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Station" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">
+            <a href="{% url 'station:detail' report.station.code %}" class="hover:text-indigo-600 dark:hover:text-indigo-400">{{ report.station.name }}</a>
+          </p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Device" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">
+            {% if report.camera %}
+              {{ report.camera.name }} <span class="text-xs text-slate-400">({% trans "camera" %})</span>
+            {% elif report.radio_receiver %}
+              {{ report.radio_receiver.name }} <span class="text-xs text-slate-400">({% trans "radio" %})</span>
+            {% else %}
+              —
+            {% endif %}
+          </p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Recorded at (UTC)" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ report.recorded_at|date:"Y-m-d H:i:s" }}</p>
+        </div>
+        {% if report.duration_ms is not None %}
+          <div>
+            <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Duration" %}</p>
+            <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ report.duration_ms }} ms</p>
+          </div>
+        {% endif %}
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Event" %}</p>
+          {% if report.event %}
+            <a href="{% url 'events:detail' report.event.code %}" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline font-mono text-xs">
+              {{ report.event.code }} — {{ report.event.name }}
+            </a>
+          {% else %}
+            <span class="text-slate-400 text-xs">{% trans "Not linked yet" %}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% if report.notes %}
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Notes" %}</h3></div>
+        <div class="card-body text-sm text-slate-600 dark:text-slate-300">
+          {{ report.notes|linebreaksbr }}
+        </div>
+      </div>
+    {% endif %}
+
+    {# ── Files card ─────────────────────────────────────────────────────── #}
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Available files" %}</h3>
+        <span class="text-xs text-slate-400">{{ report.files.count }}</span>
+      </div>
+
+      {% if report.files.exists %}
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{% trans "Type" %}</th>
+                <th>{% trans "Filename" %}</th>
+                <th>{% trans "Size" %}</th>
+                <th>{% trans "Description" %}</th>
+                <th>{% trans "Available" %}</th>
+                {% if request.user.role == 'admin' %}<th></th>{% endif %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for f in report.files.all %}
+                <tr>
+                  <td>
+                    <span class="badge">{{ f.get_file_type_display }}</span>
+                  </td>
+                  <td class="font-mono text-xs text-slate-600 dark:text-slate-400 break-all">{{ f.filename }}</td>
+                  <td class="tabular-nums text-sm text-slate-500">{{ f.file_size_display }}</td>
+                  <td class="text-sm text-slate-500">{{ f.description|default:"—" }}</td>
+                  <td>
+                    {% if f.is_available %}
+                      <span class="badge badge-green"><span class="dot-green"></span>{% trans "Yes" %}</span>
+                    {% else %}
+                      <span class="badge badge-red"><span class="dot-red"></span>{% trans "No" %}</span>
+                    {% endif %}
+                  </td>
+                  {% if request.user.role == 'admin' %}
+                    <td>
+                      <form method="post" action="{% url 'reports:file_delete' report.pk f.pk %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="btn-ghost btn-xs text-red-500 hover:text-red-700"
+                                onclick="return confirm('{% trans "Remove this file?" %}')">
+                          {% trans "Remove" %}
+                        </button>
+                      </form>
+                    </td>
+                  {% endif %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="card-body">
+          <p class="text-sm text-slate-400">{% trans "No files registered." %}</p>
+        </div>
+      {% endif %}
+
+      {% if request.user.role == 'admin' %}
+        <div class="card-header border-t border-slate-100 dark:border-slate-700 mt-0">
+          <h4 class="card-title text-sm font-medium text-slate-600 dark:text-slate-400">{% trans "Add file" %}</h4>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{% url 'reports:file_add' report.pk %}" novalidate>
+            {% csrf_token %}
+            {{ file_formset.management_form }}
+            {% for form in file_formset %}
+              {% if not form.instance.pk %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label class="event-form-label">{{ form.file_type.label }}</label>
+                    {{ form.file_type }}
+                    {% for err in form.file_type.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="event-form-label">{{ form.filename.label }} <span class="text-red-500 ml-0.5">*</span></label>
+                    {{ form.filename }}
+                    {% for err in form.filename.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+                  </div>
+                  <div>
+                    <label class="event-form-label">{{ form.file_size_bytes.label }}</label>
+                    {{ form.file_size_bytes }}
+                    {% for err in form.file_size_bytes.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="event-form-label">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {% for err in form.description.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input type="checkbox" name="{{ form.is_available.html_name }}" id="{{ form.is_available.auto_id }}"
+                           {% if form.is_available.value %}checked{% endif %} class="rounded">
+                    <label for="{{ form.is_available.auto_id }}" class="text-sm text-slate-600 dark:text-slate-400">{{ form.is_available.label }}</label>
+                  </div>
+                  {# Hidden DELETE field for management #}
+                  {{ form.DELETE.as_hidden }}
+                </div>
+              {% endif %}
+            {% endfor %}
+            <div class="mt-4">
+              <button type="submit" class="btn-primary btn-sm">{% trans "Add file" %}</button>
+            </div>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  {# ── Sidebar ──────────────────────────────────────────────────────────── #}
+  <div class="space-y-6">
+
+    <div class="card">
+      <div class="card-body text-xs text-slate-400 space-y-1">
+        <p>{% trans "Created" %} {{ report.created_at|date:"Y-m-d H:i" }} UTC</p>
+        <p>{% trans "Updated" %} {{ report.updated_at|date:"Y-m-d H:i" }} UTC</p>
+      </div>
+    </div>
+
+    {% if report.event %}
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Linked event" %}</h3></div>
+        <div class="card-body space-y-2 text-sm">
+          <p class="font-mono text-indigo-500 dark:text-indigo-400 text-xs">{{ report.event.code }}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ report.event.name }}</p>
+          <p class="text-slate-400 text-xs">{{ report.event.get_event_type_display }}</p>
+          <a href="{% url 'events:detail' report.event.code %}" class="btn-ghost btn-xs inline-flex mt-1">{% trans "View event" %}</a>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+{% load i18n %}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+
+  <div class="stat-card">
+    <div class="stat-card-inner">
+      <span class="stat-icon-indigo">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M5 12H3l9-9 9 9h-2M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+        </svg>
+      </span>
+      <div>
+        <p class="stat-value">{{ station_count }}</p>
+        <p class="stat-label">{% trans "Estaciones" %}</p>
+      </div>
+    </div>
+    <div class="px-6 pb-4 flex gap-2 text-xs text-slate-500 dark:text-slate-400">
+      <span class="dot-green mt-0.5"></span>{{ station_active }} {% trans "activas" %}
+      <span class="dot-yellow mt-0.5 ml-2"></span>{{ station_maintenance }} {% trans "mant." %}
+      <span class="dot-red mt-0.5 ml-2"></span>{{ station_inactive }} {% trans "inactivas" %}
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-inner">
+      <span class="stat-icon-green">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+        </svg>
+      </span>
+      <div>
+        <p class="stat-value">{{ camera_count }}</p>
+        <p class="stat-label">{% trans "Cámaras" %}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-inner">
+      <span class="stat-icon-amber">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+        </svg>
+      </span>
+      <div>
+        <p class="stat-value">{{ radio_count }}</p>
+        <p class="stat-label">{% trans "Receptores Radio" %}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-card-inner">
+      <span class="stat-icon-blue">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </span>
+      <div>
+        <p class="stat-value">{{ user_count }}</p>
+        <p class="stat-label">{% trans "Usuarios" %}</p>
+      </div>
+    </div>
+    <div class="px-6 pb-4 text-xs text-slate-500 dark:text-slate-400">
+      {{ owner_count }} {% trans "propietarios" %}
+    </div>
+  </div>
+
+</div>

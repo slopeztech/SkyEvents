@@ -1,0 +1,146 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Reports" %}{% endblock %}
+{% block topbar_title %}{% trans "Reports" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-center justify-between">
+  <div>
+    <h2 class="page-title">{% trans "Reports" %}</h2>
+    <p class="page-subtitle">{{ paginator.count }} {% trans "total" %}</p>
+  </div>
+  {% if request.user.role == 'admin' %}
+    <a href="{% url 'reports:create' %}" class="btn-primary btn-sm flex items-center gap-1.5">
+      <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
+      </svg>
+      {% trans "New report" %}
+    </a>
+  {% endif %}
+</div>
+
+<div class="card mb-4">
+  <div class="card-body py-5">
+    <form method="get" class="flex flex-wrap gap-3 items-center">
+      <input type="text" name="q" value="{{ q }}"
+             placeholder="{% trans "Search station…" %}"
+             class="filter-input w-56">
+      <select name="station" class="filter-select w-44">
+        <option value="">{% trans "All stations" %}</option>
+        {% for s in station_list %}
+          <option value="{{ s.pk }}"{% if station_filter == s.pk|stringformat:"s" %} selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="status" class="filter-select w-44">
+        <option value="">{% trans "All statuses" %}</option>
+        {% for val, label in status_choices %}
+          <option value="{{ val }}"{% if status_filter == val %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn-ghost btn-sm">{% trans "Filter" %}</button>
+      {% if q or status_filter or station_filter %}
+        <a href="{% url 'reports:list' %}" class="btn-ghost btn-sm text-slate-400">{% trans "Clear" %}</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+{% if reports %}
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>{% trans "Station" %}</th>
+          <th>{% trans "Device" %}</th>
+          <th>{% trans "Recorded at (UTC)" %}</th>
+          <th>{% trans "Duration" %}</th>
+          <th>{% trans "Event" %}</th>
+          <th>{% trans "Status" %}</th>
+          <th>{% trans "Files" %}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in reports %}
+          <tr>
+            <td class="font-medium text-slate-900 dark:text-slate-100">
+              <a href="{% url 'reports:detail' report.pk %}" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+                {{ report.station.name }}
+              </a>
+            </td>
+            <td class="text-slate-500 text-sm">
+              {% if report.camera %}
+                {{ report.camera.name }}
+              {% elif report.radio_receiver %}
+                {{ report.radio_receiver.name }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td class="tabular-nums text-sm text-slate-600 dark:text-slate-400">
+              {{ report.recorded_at|date:"Y-m-d H:i" }}
+            </td>
+            <td class="tabular-nums text-sm text-slate-500">
+              {{ report.duration_ms|default:"—" }}{% if report.duration_ms %} ms{% endif %}
+            </td>
+            <td class="text-sm">
+              {% if report.event %}
+                <a href="{% url 'events:detail' report.event.code %}" class="text-indigo-600 dark:text-indigo-400 hover:underline font-mono text-xs">
+                  {{ report.event.code }}
+                </a>
+              {% else %}
+                <span class="text-slate-400">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if report.status == 'linked' %}
+                <span class="badge badge-green"><span class="dot-green"></span>{{ report.get_status_display }}</span>
+              {% elif report.status == 'archived' %}
+                <span class="badge"><span class="dot"></span>{{ report.get_status_display }}</span>
+              {% else %}
+                <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ report.get_status_display }}</span>
+              {% endif %}
+            </td>
+            <td class="tabular-nums text-sm text-slate-500">{{ report.files.count }}</td>
+            <td>
+              {% if request.user.role == 'admin' %}
+                <div class="flex items-center gap-2 justify-end">
+                  <a href="{% url 'reports:edit' report.pk %}" class="btn-ghost btn-xs">{% trans "Edit" %}</a>
+                  <a href="{% url 'reports:delete' report.pk %}" class="btn-ghost btn-xs text-red-500 hover:text-red-700">{% trans "Delete" %}</a>
+                </div>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+    <div class="flex items-center justify-between mt-4 text-sm text-slate-500">
+      <span>{% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ paginator.num_pages }}</span>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if station_filter %}&station={{ station_filter }}{% endif %}" class="btn-ghost btn-xs">{% trans "Previous" %}</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if station_filter %}&station={{ station_filter }}{% endif %}" class="btn-ghost btn-xs">{% trans "Next" %}</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+{% else %}
+  <div class="card">
+    <div class="card-body text-center py-16 space-y-3">
+      <p class="text-slate-400 text-sm">{% trans "No reports found." %}</p>
+      {% if request.user.role == 'admin' %}
+        <a href="{% url 'reports:create' %}" class="btn-primary btn-sm inline-flex items-center gap-1.5">{% trans "Create first report" %}</a>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

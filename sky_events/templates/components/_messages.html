@@ -1,0 +1,29 @@
+{% load i18n %}
+
+{% if messages %}
+<div class="space-y-3 px-4 py-4 md:px-0" aria-live="polite" aria-atomic="false" role="status">
+  {% for message in messages %}
+    {% if message.tags == 'error' or message.tags == 'danger' %}
+      <div class="alert-error" data-auto-dismiss="6000" role="alert">
+        <span aria-hidden="true">✕</span>
+        <span>{{ message }}</span>
+      </div>
+    {% elif message.tags == 'warning' %}
+      <div class="alert-warning" data-auto-dismiss="6000" role="alert">
+        <span aria-hidden="true">⚠</span>
+        <span>{{ message }}</span>
+      </div>
+    {% elif message.tags == 'success' %}
+      <div class="alert-success" data-auto-dismiss="6000" role="alert">
+        <span aria-hidden="true">✓</span>
+        <span>{{ message }}</span>
+      </div>
+    {% else %}
+      <div class="alert-info" data-auto-dismiss="6000" role="alert">
+        <span aria-hidden="true">ℹ</span>
+        <span>{{ message }}</span>
+      </div>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}

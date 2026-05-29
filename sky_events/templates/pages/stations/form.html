@@ -1,0 +1,151 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block topbar_title %}{% trans "Stations" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-center justify-between">
+  <div>
+    <h2 class="page-title">{{ page_title }}</h2>
+  </div>
+  <a href="{% url 'station:list' %}" class="btn-ghost btn-sm flex items-center gap-1">
+    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd"/>
+    </svg>
+    {% trans "Back to list" %}
+  </a>
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300 space-y-1">
+      {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-2 space-y-6">
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Identity" %}</h3></div>
+        <div class="card-body space-y-4">
+          <div>
+            <label for="{{ form.owner.id_for_label }}" class="event-form-label">
+              {{ form.owner.label }}<span class="text-red-500 ml-0.5">*</span>
+            </label>
+            <select name="owner" id="{{ form.owner.id_for_label }}"
+                    class="event-form-select{% if form.owner.errors %} event-form-input-error{% endif %}">
+              {% for val, label in form.fields.owner.choices %}
+                <option value="{{ val }}"{% if form.owner.value|stringformat:"s" == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            {% for err in form.owner.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.name.id_for_label }}" class="event-form-label">
+                {{ form.name.label }}<span class="text-red-500 ml-0.5">*</span>
+              </label>
+              <input type="text" name="name" id="{{ form.name.id_for_label }}"
+                     value="{{ form.name.value|default:'' }}"
+                     class="event-form-input{% if form.name.errors %} event-form-input-error{% endif %}" required>
+              {% for err in form.name.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+            </div>
+            <div>
+              <label for="{{ form.code.id_for_label }}" class="event-form-label">
+                {{ form.code.label }}<span class="text-red-500 ml-0.5">*</span>
+              </label>
+              <input type="text" name="code" id="{{ form.code.id_for_label }}"
+                     value="{{ form.code.value|default:'' }}"
+                     placeholder="station-madrid-01"
+                     class="event-form-input font-mono{% if form.code.errors %} event-form-input-error{% endif %}" required>
+              {% for err in form.code.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+            </div>
+          </div>
+          <div>
+            <label for="{{ form.description.id_for_label }}" class="event-form-label">{{ form.description.label }}</label>
+            <textarea name="description" id="{{ form.description.id_for_label }}" rows="3"
+                      class="event-form-input">{{ form.description.value|default:'' }}</textarea>
+            {% for err in form.description.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Location" %}</h3></div>
+        <div class="card-body grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label for="{{ form.latitude.id_for_label }}" class="event-form-label">
+              {{ form.latitude.label }}<span class="text-red-500 ml-0.5">*</span>
+            </label>
+            <input type="number" name="latitude" id="{{ form.latitude.id_for_label }}"
+                   value="{{ form.latitude.value|default:'' }}" step="0.000001" min="-90" max="90"
+                   class="event-form-input{% if form.latitude.errors %} event-form-input-error{% endif %}" required>
+            {% for err in form.latitude.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.longitude.id_for_label }}" class="event-form-label">
+              {{ form.longitude.label }}<span class="text-red-500 ml-0.5">*</span>
+            </label>
+            <input type="number" name="longitude" id="{{ form.longitude.id_for_label }}"
+                   value="{{ form.longitude.value|default:'' }}" step="0.000001" min="-180" max="180"
+                   class="event-form-input{% if form.longitude.errors %} event-form-input-error{% endif %}" required>
+            {% for err in form.longitude.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.altitude_m.id_for_label }}" class="event-form-label">
+              {{ form.altitude_m.label }}<span class="text-red-500 ml-0.5">*</span>
+            </label>
+            <input type="number" name="altitude_m" id="{{ form.altitude_m.id_for_label }}"
+                   value="{{ form.altitude_m.value|default:'' }}"
+                   class="event-form-input{% if form.altitude_m.errors %} event-form-input-error{% endif %}" required>
+            {% for err in form.altitude_m.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="space-y-6">
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Configuration" %}</h3></div>
+        <div class="card-body space-y-4">
+          <div>
+            <label for="{{ form.timezone.id_for_label }}" class="event-form-label">{{ form.timezone.label }}</label>
+            <select name="timezone" id="{{ form.timezone.id_for_label }}"
+                    class="event-form-select{% if form.timezone.errors %} event-form-input-error{% endif %}">
+              {% for val, label in form.fields.timezone.choices %}
+                <option value="{{ val }}"{% if form.timezone.value == val %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            {% for err in form.timezone.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ form.status.id_for_label }}" class="event-form-label">{{ form.status.label }}</label>
+            <select name="status" id="{{ form.status.id_for_label }}"
+                    class="event-form-select{% if form.status.errors %} event-form-input-error{% endif %}">
+              {% for val, label in form.fields.status.choices %}
+                <option value="{{ val }}"{% if form.status.value == val %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            {% for err in form.status.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="sticky bottom-6">
+        <button type="submit" class="btn-primary w-full justify-center">{{ submit_label }}</button>
+      </div>
+
+    </div>
+
+  </div>
+</form>
+
+{% endblock %}

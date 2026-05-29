@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans "Sign in" %}{% endblock %}
+
+{% block body %}
+<div class="auth-page">
+
+  {# Flash messages (e.g. "session expired") #}
+  {% include "components/_messages.html" %}
+
+  <div class="auth-card">
+
+    {# ── Card header ─────────────────────────────────────────────────── #}
+    <div class="auth-header">
+      <a href="{% url 'web:index' %}" class="auth-logo">
+        <img src="{% static 'images/logo.svg' %}" alt="SkyEvents" width="130" height="30">
+      </a>
+      <h1 class="auth-title">{% trans "Welcome back" %}</h1>
+      <p class="auth-subtitle">{% trans "Sign in to your SkyEvents account" %}</p>
+    </div>
+
+    {# ── Login form ──────────────────────────────────────────────────── #}
+    <div class="auth-body">
+
+      {# Non-field errors (invalid credentials, account locked, etc.) #}
+      {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+          <div class="alert-error" role="alert">
+            <span aria-hidden="true">✕</span>
+            <span>{{ error }}</span>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" action="" novalidate>
+        {% csrf_token %}
+
+        {# Email field #}
+        <div class="form-group">
+          <label for="{{ form.username.id_for_label }}" class="form-label form-required">
+            {% trans "Email address" %}
+          </label>
+          {{ form.username }}
+          {% for error in form.username.errors %}
+            <p class="form-error-msg" role="alert">
+              <span aria-hidden="true">✕</span>
+              <span>{{ error }}</span>
+            </p>
+          {% endfor %}
+        </div>
+
+        {# Password field with show/hide toggle #}
+        <div class="form-group mt-4">
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="{{ form.password.id_for_label }}" class="form-label form-required">
+              {% trans "Password" %}
+            </label>
+            {# Future: forgot password link #}
+            {# <a href="#" class="text-xs text-indigo-600 hover:underline">{% trans "Forgot password?" %}</a> #}
+          </div>
+          <div class="password-wrapper">
+            {{ form.password }}
+            <button type="button"
+                    class="password-toggle"
+                    data-password-toggle="id_password"
+                    aria-label="{% trans "Show password" %}">
+              {# Eye icon — show password #}
+              <svg data-icon-show class="w-4.5 h-4.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/>
+                <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clip-rule="evenodd"/>
+              </svg>
+              {# Eye-slash icon — hide password #}
+              <svg data-icon-hide class="w-4.5 h-4.5 hidden" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.745-1.745a10.029 10.029 0 0 0 3.3-4.38 1.651 1.651 0 0 0 0-1.185A10.004 10.004 0 0 0 9.999 3a9.956 9.956 0 0 0-4.744 1.194L3.28 2.22ZM7.752 6.69l1.092 1.092a2.5 2.5 0 0 1 3.374 3.373l1.091 1.092a4 4 0 0 0-5.557-5.557Z" clip-rule="evenodd"/>
+                <path d="M10.748 13.93l2.523 2.523a10.003 10.003 0 0 1-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 0 1 0-1.186A10.007 10.007 0 0 1 2.839 6.02L6.07 9.252a4 4 0 0 0 4.678 4.678Z"/>
+              </svg>
+            </button>
+          </div>
+          {% for error in form.password.errors %}
+            <p class="form-error-msg" role="alert">
+              <span aria-hidden="true">✕</span>
+              <span>{{ error }}</span>
+            </p>
+          {% endfor %}
+        </div>
+
+        {# Submit #}
+        <button type="submit" class="btn-primary w-full mt-6">
+          {% trans "Sign in" %}
+          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+
+      </form>
+
+      {# Language switcher #}
+      <div class="auth-footer">
+        {% include "components/_lang_switch.html" %}
+      </div>
+
+    </div>{# .auth-body #}
+
+  </div>{# .auth-card #}
+
+</div>{# .auth-page #}
+{% endblock %}

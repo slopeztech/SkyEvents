@@ -1,0 +1,140 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Events" %}{% endblock %}
+{% block topbar_title %}{% trans "Events" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-start justify-between">
+  <div>
+    <h2 class="page-title">{% trans "Astronomical Events" %}</h2>
+    <p class="page-subtitle">{% trans "All events detected by the network." %}</p>
+  </div>
+  {% if request.user.role == 'admin' %}
+    <a href="{% url 'events:create' %}" class="btn-primary btn-sm flex items-center gap-1.5">
+      <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
+      </svg>
+      {% trans "New event" %}
+    </a>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="card-header flex-wrap gap-3">
+    <h3 class="card-title">{% trans "Event list" %}</h3>
+    <form method="get" class="flex items-center gap-2 flex-wrap">
+      <select name="status" onchange="this.form.submit()"
+              class="text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600
+                     text-slate-700 dark:text-slate-300 rounded-lg px-3 py-1.5
+                     focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="">{% trans "All statuses" %}</option>
+        {% for val, label in status_choices %}
+          <option value="{{ val }}"{% if current_status == val %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <select name="type" onchange="this.form.submit()"
+              class="text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600
+                     text-slate-700 dark:text-slate-300 rounded-lg px-3 py-1.5
+                     focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="">{% trans "All types" %}</option>
+        {% for val, label in type_choices %}
+          <option value="{{ val }}"{% if current_type == val %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  {% if events %}
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{% trans "Code" %}</th>
+            <th>{% trans "Name" %}</th>
+            <th>{% trans "Type" %}</th>
+            <th>{% trans "Detected at (UTC)" %}</th>
+            <th>{% trans "Status" %}</th>
+            <th class="text-center">{% trans "Stations" %}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ev in events %}
+            <tr>
+              <td>
+                <a href="{% url 'events:detail' ev.code %}"
+                   class="font-mono text-indigo-600 dark:text-indigo-400 hover:underline text-sm">
+                  {{ ev.code }}
+                </a>
+              </td>
+              <td class="font-medium text-slate-900 dark:text-slate-100">{{ ev.name }}</td>
+              <td>
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                  {{ ev.get_event_type_display }}
+                </span>
+              </td>
+              <td class="text-slate-500 dark:text-slate-400 text-sm tabular-nums">
+                {{ ev.detected_at|date:"Y-m-d H:i" }}
+              </td>
+              <td>
+                {% if ev.status == 'published' %}
+                  <span class="badge badge-green"><span class="dot-green"></span>{{ ev.get_status_display }}</span>
+                {% elif ev.status == 'confirmed' %}
+                  <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ ev.get_status_display }}</span>
+                {% elif ev.status == 'archived' %}
+                  <span class="badge"><span class="dot"></span>{{ ev.get_status_display }}</span>
+                {% else %}
+                  <span class="badge badge-red"><span class="dot-red"></span>{{ ev.get_status_display }}</span>
+                {% endif %}
+              </td>
+              <td class="text-center text-slate-600 dark:text-slate-400">{{ ev.stations.count }}</td>
+              <td class="text-right">
+                <a href="{% url 'events:detail' ev.code %}" class="btn-ghost btn-sm">{% trans "View" %}</a>
+                {% if request.user.role == 'admin' %}
+                  <a href="{% url 'events:edit' ev.code %}" class="btn-ghost btn-sm">{% trans "Edit" %}</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+      <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-sm text-slate-500">
+        <span>
+          {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=paginator.count %}
+            {{ start }}–{{ end }} of {{ total }}
+          {% endblocktrans %}
+        </span>
+        <div class="flex gap-2">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}"
+               class="btn-ghost btn-sm">{% trans "Previous" %}</a>
+          {% endif %}
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}"
+               class="btn-ghost btn-sm">{% trans "Next" %}</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="empty-state">
+      <svg class="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+      </svg>
+      <p class="text-slate-500 dark:text-slate-400">{% trans "No events found." %}</p>
+      {% if request.user.role == 'admin' %}
+        <a href="{% url 'events:create' %}" class="btn-primary btn-sm mt-4">{% trans "Create first event" %}</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

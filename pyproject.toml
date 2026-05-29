@@ -1,0 +1,154 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "skyevents"
+version = "0.1.0"
+description = "Astronomical event management platform for automated observation stations"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+
+# ---------------------------------------------------------------------------
+# Ruff — fast Python linter and formatter
+# ---------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["sky_events"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "RUF", # ruff-specific rules
+    "S",   # flake8-bandit (security)
+    "N",   # pep8-naming
+    "ANN", # flake8-annotations
+    "PTH", # flake8-use-pathlib
+    "ERA", # flake8-eradicate (commented-out code)
+    "PL",  # pylint
+    "TCH", # flake8-type-checking
+]
+ignore = [
+    "ANN101", # missing type annotation for self
+    "ANN102", # missing type annotation for cls
+    "ANN401", # any-type allowed in some contexts
+    "S101",   # use of assert in tests is fine
+    "PLR0913", # too many arguments — okay for service functions
+]
+
+[tool.ruff.lint.per-file-ignores]
+"*/tests/*" = ["S101", "ANN", "PLR2004"]
+"*/migrations/*" = ["ANN", "N999", "E501"]
+"manage.py" = ["ANN"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["sky_events"]
+known-django = ["django"]
+section-order = ["future", "standard-library", "django", "third-party", "first-party", "local-folder"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+# ---------------------------------------------------------------------------
+# Black — code formatter (used alongside ruff format as source of truth)
+# ---------------------------------------------------------------------------
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+include = '\.pyi?$'
+
+# ---------------------------------------------------------------------------
+# mypy — static type checker
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+plugins = ["mypy_django_plugin.main"]
+
+[[tool.mypy.overrides]]
+module = [
+    "celery.*",
+    "kombu.*",
+    "factory.*",
+    "axes.*",
+    "drf_spectacular.*",
+]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.local"
+
+# ---------------------------------------------------------------------------
+# pytest — test runner
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+    "--tb=short",
+]
+markers = [
+    "unit: fast isolated unit tests",
+    "integration: tests requiring database",
+    "api: tests for REST API endpoints",
+    "slow: tests that take a long time",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:django.*",
+    "ignore::PendingDeprecationWarning",
+]
+
+# ---------------------------------------------------------------------------
+# coverage — test coverage configuration
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["sky_events"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__init__.py",
+    "*/apps.py",
+    "manage.py",
+]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "@(abc\\.)?abstractmethod",
+]

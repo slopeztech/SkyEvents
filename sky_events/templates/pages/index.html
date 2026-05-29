@@ -1,0 +1,302 @@
+﻿{% extends "layouts/public.html" %}
+{% load i18n static %}
+
+{% block title %}{% if site_config %}{{ site_config.page_title }}{% else %}{% trans "Automated meteor observation network" %}{% endif %}{% endblock %}
+
+{% block content %}
+
+{# ── HERO ─────────────────────────────────────────────────────────────────── #}
+{% with bg=site_config.hero_bg_style|default:"grid" %}
+<section class="hero hero-bg-{{ bg }}" aria-labelledby="hero-heading">
+
+  {# Background layer — content varies per style #}
+  <div class="hero-grid-bg" aria-hidden="true">
+    {% if bg == "grid" %}
+      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+        <defs>
+          <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
+            <path d="M 64 0 L 0 0 0 64" fill="none" stroke="#334155" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)"/>
+      </svg>
+    {% elif bg == "meteors" %}
+      <span class="meteor-streak" style="--m-x:8%;  --m-y:6%;  --m-dur:2.4s; --m-delay:0s"></span>
+      <span class="meteor-streak" style="--m-x:30%; --m-y:18%; --m-dur:3.2s; --m-delay:1.3s"></span>
+      <span class="meteor-streak" style="--m-x:55%; --m-y:4%;  --m-dur:2.8s; --m-delay:2.6s"></span>
+      <span class="meteor-streak" style="--m-x:72%; --m-y:25%; --m-dur:3.8s; --m-delay:0.7s"></span>
+      <span class="meteor-streak" style="--m-x:88%; --m-y:12%; --m-dur:2.1s; --m-delay:3.4s"></span>
+      <span class="meteor-streak" style="--m-x:15%; --m-y:50%; --m-dur:3.5s; --m-delay:4.1s"></span>
+    {% elif bg == "christmas" %}
+      <span class="snowflake" style="--sf-x:5%;  --sf-size:0.9rem; --sf-dur:7s;  --sf-delay:0s;   --sf-drift:20px">&#10052;</span>
+      <span class="snowflake" style="--sf-x:15%; --sf-size:1.4rem; --sf-dur:9s;  --sf-delay:1.2s; --sf-drift:-15px">&#10053;</span>
+      <span class="snowflake" style="--sf-x:25%; --sf-size:0.8rem; --sf-dur:6s;  --sf-delay:0.5s; --sf-drift:25px">&#10052;</span>
+      <span class="snowflake" style="--sf-x:38%; --sf-size:1.1rem; --sf-dur:8s;  --sf-delay:2.3s; --sf-drift:-20px">&#10054;</span>
+      <span class="snowflake" style="--sf-x:50%; --sf-size:1.5rem; --sf-dur:10s; --sf-delay:0.9s; --sf-drift:10px">&#10052;</span>
+      <span class="snowflake" style="--sf-x:62%; --sf-size:0.7rem; --sf-dur:5.5s;--sf-delay:3.1s; --sf-drift:-30px">&#10053;</span>
+      <span class="snowflake" style="--sf-x:73%; --sf-size:1.2rem; --sf-dur:7.5s;--sf-delay:1.7s; --sf-drift:18px">&#10054;</span>
+      <span class="snowflake" style="--sf-x:83%; --sf-size:0.9rem; --sf-dur:6.5s;--sf-delay:0.3s; --sf-drift:-12px">&#10052;</span>
+      <span class="snowflake" style="--sf-x:93%; --sf-size:1.3rem; --sf-dur:8.5s;--sf-delay:2.8s; --sf-drift:22px">&#10053;</span>
+    {% endif %}
+  </div>
+
+  <div class="container-app">
+    <div class="hero-inner">
+
+      <p class="hero-badge">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 0 0-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 0 0 .951-.69l1.07-3.292Z"/>
+        </svg>
+        {% if site_config %}{{ site_config.hero_badge }}{% else %}{% trans "Meteor detection network" %}{% endif %}
+      </p>
+
+      <h1 id="hero-heading" class="hero-title">
+        {% if site_config %}
+          {{ site_config.hero_pre_highlight }}
+          <span class="hero-highlight">{{ site_config.hero_highlight }}</span>,<br>
+          {{ site_config.hero_post_highlight }}
+        {% else %}
+          {% trans "Observe the" %}
+          <span class="hero-highlight">{% trans "cosmos" %}</span>,<br>
+          {% trans "automatically." %}
+        {% endif %}
+      </h1>
+
+      <p class="hero-subtitle">
+        {% if site_config %}{{ site_config.hero_subtitle }}{% else %}{% trans "SkyEvents coordinates your network of stations, cameras, and radio receivers to detect and classify astronomical events in real time." %}{% endif %}
+      </p>
+
+      <div class="hero-cta">
+        {% if request.user.is_authenticated %}
+          <a href="{% url 'web:dashboard' %}" class="btn-primary btn-lg">
+            {% trans "Go to dashboard" %}
+            <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd"/>
+            </svg>
+          </a>
+        {% else %}
+          <a href="{% url 'web:login' %}" class="btn-primary btn-lg">
+            {% trans "Sign in to your account" %}
+            <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd"/>
+            </svg>
+          </a>
+          <a href="#events" class="btn-primary-outline btn-lg">
+            {% trans "Recent events" %}
+          </a>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endwith %}
+
+{# ── EVENTS TIMELINE ──────────────────────────────────────────────────────── #}
+<section id="events" class="events-section" aria-labelledby="events-heading">
+  <div class="container-app">
+
+    <header class="section-header">
+      <p class="section-eyebrow">{% trans "Network" %}</p>
+      <h2 id="events-heading" class="section-title" style="color:#f1f5f9">
+        {% trans "Latest confirmed events" %}
+      </h2>
+      <p class="section-subtitle">
+        {% trans "The most recent astronomical events observed and published by our detection network." %}
+      </p>
+    </header>
+
+    <div class="timeline-wrap">
+      {% if recent_events %}
+        <ol class="timeline-list" aria-label="{% trans "Recent events" %}">
+          {% for event in recent_events %}
+            <li class="timeline-item">
+
+              {# Dot #}
+              <div class="timeline-dot
+                {% if event.event_type == 'fireball'  %}timeline-dot-fireball
+                {% elif event.event_type == 'aurora'   %}timeline-dot-aurora
+                {% elif event.event_type == 'satellite'%}timeline-dot-satellite
+                {% elif event.event_type == 'shower'   %}timeline-dot-shower
+                {% elif event.event_type == 'sporadic' %}timeline-dot-sporadic
+                {% elif event.event_type == 'other'    %}timeline-dot-other
+                {% else %}timeline-dot-meteor{% endif %}" aria-hidden="true">
+                {% if event.event_type == "fireball" %}
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 2C8.25 2 4 6.25 4 11.5c0 2.91 1.32 5.52 3.4 7.27L6 22h12l-1.4-3.23A9.5 9.5 0 0 0 19 11.5C19 6.25 14.75 2 9.5 2h4Z"/></svg>
+                {% elif event.event_type == "aurora" %}
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4"/></svg>
+                {% elif event.event_type == "satellite" %}
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="m5 19 14-14M5 5l14 14"/></svg>
+                {% elif event.event_type == "shower" %}
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 2v10l4.24 4.24"/></svg>
+                {% else %}
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="m15 2-4 6h3l-5 14 9-10h-4l5-10H15Z"/></svg>
+                {% endif %}
+              </div>
+
+              {# Card #}
+              <div class="timeline-card">
+                <div class="timeline-card-meta">
+                  <span class="timeline-code">{{ event.code }}</span>
+                  <span class="timeline-type-badge
+                    {% if event.event_type == 'fireball'  %}badge-fireball
+                    {% elif event.event_type == 'aurora'   %}badge-aurora
+                    {% elif event.event_type == 'satellite'%}badge-satellite
+                    {% elif event.event_type == 'shower'   %}badge-shower
+                    {% elif event.event_type == 'sporadic' %}badge-sporadic
+                    {% elif event.event_type == 'other'    %}badge-other
+                    {% else %}badge-meteor{% endif %}">
+                    {{ event.get_event_type_display }}
+                  </span>
+                </div>
+                <p class="timeline-name">{{ event.name }}</p>
+                <p class="timeline-time">
+                  <svg class="inline w-3 h-3 mr-0.5 opacity-50" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd"/>
+                  </svg>
+                  {{ event.detected_at|timesince }} {% trans "ago" %} &nbsp;&middot;&nbsp; {{ event.detected_at|date:"j N Y, G:i" }} UTC
+                </p>
+              </div>
+
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <div class="timeline-empty">
+          <div class="w-16 h-16 rounded-full bg-slate-800/60 flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>
+            </svg>
+          </div>
+          <p class="text-slate-400 font-medium">{% trans "No published events yet." %}</p>
+          <p class="text-sm text-slate-600 mt-1">{% trans "Check back soon — the network is watching the sky." %}</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+{# ── REPORT EVENT ─────────────────────────────────────────────────────────── #}
+<section id="report" class="report-section" aria-labelledby="report-heading">
+  <div class="container-app">
+    <div class="report-card">
+      <div class="report-card-header">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-600/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 id="report-heading" class="text-xl font-bold text-slate-100">{% trans "Report an event" %}</h2>
+            <p class="text-sm text-slate-400">{% trans "Did you spot something? Send us your observation — no account needed." %}</p>
+          </div>
+        </div>
+      </div>
+
+      <form method="post" action="{% url 'notices:submit' %}" novalidate>
+        {% csrf_token %}
+        <div class="report-card-body">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="form-group">
+              <label for="id_name" class="form-label">{{ notice_form.name.label }}</label>
+              <input type="text" name="name" id="id_name" autocomplete="name" required
+                     placeholder="{% trans "Your name" %}"
+                     class="form-input{% if notice_form.name.errors %} border-red-500{% endif %}"
+                     value="{{ notice_form.name.value|default:'' }}">
+              {% for err in notice_form.name.errors %}<p class="form-error">{{ err }}</p>{% endfor %}
+            </div>
+            <div class="form-group">
+              <label for="id_email" class="form-label">{{ notice_form.email.label }}</label>
+              <input type="email" name="email" id="id_email" autocomplete="email" required
+                     placeholder="you@example.com"
+                     class="form-input{% if notice_form.email.errors %} border-red-500{% endif %}"
+                     value="{{ notice_form.email.value|default:'' }}">
+              {% for err in notice_form.email.errors %}<p class="form-error">{{ err }}</p>{% endfor %}
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="form-group">
+              <label for="id_event_type" class="form-label">{{ notice_form.event_type.label }}</label>
+              <select name="event_type" id="id_event_type" required
+                      class="form-select{% if notice_form.event_type.errors %} border-red-500{% endif %}">
+                {% for val, label in notice_form.fields.event_type.choices %}
+                  <option value="{{ val }}"{% if notice_form.event_type.value == val %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              {% for err in notice_form.event_type.errors %}<p class="form-error">{{ err }}</p>{% endfor %}
+            </div>
+            <div class="form-group">
+              <label for="id_observation_date" class="form-label">{{ notice_form.observation_date.label }}</label>
+              <input type="date" name="observation_date" id="id_observation_date" required
+                     class="form-input{% if notice_form.observation_date.errors %} border-red-500{% endif %}"
+                     value="{{ notice_form.observation_date.value|default:'' }}">
+              {% for err in notice_form.observation_date.errors %}<p class="form-error">{{ err }}</p>{% endfor %}
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="id_location" class="form-label">{{ notice_form.location.label }}</label>
+            <input type="text" name="location" id="id_location" required
+                   placeholder="{% trans "City, region or approximate coordinates" %}"
+                   class="form-input{% if notice_form.location.errors %} border-red-500{% endif %}"
+                   value="{{ notice_form.location.value|default:'' }}">
+            {% for err in notice_form.location.errors %}<p class="form-error">{{ err }}</p>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label for="id_description" class="form-label">{{ notice_form.description.label }}</label>
+            <textarea name="description" id="id_description" rows="4" required
+                      placeholder="{% trans "Describe what you saw: direction, duration, brightness, colour..." %}"
+                      class="form-textarea{% if notice_form.description.errors %} border-red-500{% endif %}">{{ notice_form.description.value|default:'' }}</textarea>
+            {% for err in notice_form.description.errors %}<p class="form-error">{{ err }}</p>{% endfor %}
+            <p class="form-hint">{% trans "Max 2 000 characters. The more detail, the better." %}</p>
+          </div>
+        </div>
+        <div class="report-card-footer">
+          <p class="text-xs text-slate-500 max-w-xs">
+            {% trans "Your email will only be used to follow up on your report if needed." %}
+          </p>
+          <button type="submit" class="btn-primary btn-lg">
+            {% trans "Send report" %}
+            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M3.105 2.289a.75.75 0 0 0-.826.95l1.414 4.925A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.896 28.896 0 0 0 15.293-7.154.75.75 0 0 0 0-1.115A28.897 28.897 0 0 0 3.105 2.289Z"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+  /* Highlight nav links while their section is visible in the viewport */
+  var links = document.querySelectorAll('.nav-link[data-section]');
+  if (!links.length || !('IntersectionObserver' in window)) return;
+
+  var sectionMap = {};
+  links.forEach(function (link) {
+    var id = link.dataset.section;
+    var el = document.getElementById(id);
+    if (el) sectionMap[id] = { link: link, el: el };
+  });
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      var item = sectionMap[entry.target.id];
+      if (!item) return;
+      item.link.classList.toggle('nav-link-section-active', entry.isIntersecting);
+    });
+  }, {
+    /* activate when at least 15 % of the section is in view */
+    threshold: 0.15
+  });
+
+  Object.values(sectionMap).forEach(function (item) { observer.observe(item.el); });
+}());
+</script>
+{% endblock %}

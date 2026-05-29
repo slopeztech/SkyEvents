@@ -1,0 +1,80 @@
+{% load i18n %}
+<div class="card h-full flex flex-col">
+  <div class="card-header">
+    <h3 class="card-title">{% trans "Estaciones Recientes" %}</h3>
+    <a href="#" class="btn-ghost btn-sm flex items-center gap-1">
+      {% trans "Ver todas" %}
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+
+  {% if recent_stations %}
+    <div class="flex-1 overflow-x-auto">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{% trans "Estación" %}</th>
+            <th>{% trans "Propietario" %}</th>
+            <th>{% trans "Estado" %}</th>
+            <th class="text-center">
+              <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 10l4.553-2.069A1 1 0 0121 8.82V15.18a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+              </svg>
+            </th>
+            <th class="text-center">
+              <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+              </svg>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for station in recent_stations %}
+            <tr>
+              <td>
+                <a href="#" class="font-medium text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  {{ station.name }}
+                </a>
+                <p class="text-xs text-slate-400 dark:text-slate-500 font-mono mt-0.5">{{ station.code }}</p>
+              </td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <span class="avatar-sm text-xs">{{ station.owner.get_full_name|slice:":2"|upper|default:station.owner.email|slice:":2"|upper }}</span>
+                  <span class="text-slate-600 dark:text-slate-300">{{ station.owner.get_full_name|default:station.owner.email }}</span>
+                </div>
+              </td>
+              <td>
+                {% if station.status == "active" %}
+                  <span class="badge badge-green"><span class="dot-green"></span>{% trans "Activa" %}</span>
+                {% elif station.status == "inactive" %}
+                  <span class="badge badge-red"><span class="dot-red"></span>{% trans "Inactiva" %}</span>
+                {% else %}
+                  <span class="badge badge-yellow"><span class="dot-yellow"></span>{% trans "Mant." %}</span>
+                {% endif %}
+              </td>
+              <td class="text-center text-slate-600 dark:text-slate-400">{{ station.cam_count }}</td>
+              <td class="text-center text-slate-600 dark:text-slate-400">{{ station.radio_count }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="card-body flex-1">
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M5 12H3l9-9 9 9h-2M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+          </svg>
+        </div>
+        <p class="empty-state-title">{% trans "Sin estaciones" %}</p>
+        <p class="empty-state-desc">{% trans "Aún no hay estaciones registradas en el sistema." %}</p>
+      </div>
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,40 @@
+{% load i18n static %}<!DOCTYPE html>
+<html lang="{{ request.LANGUAGE_CODE|default:'en' }}" class="">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{% block meta_desc %}{% trans "SkyEvents — Automated meteor detection and astronomical event management network" %}{% endblock %}">
+  <meta name="theme-color" content="#0f172a">
+
+  <title>{% block title %}SkyEvents{% endblock %}</title>
+
+  {# Prevent dark-mode flash — must run before any CSS #}
+  <script>
+    (function(){var t=localStorage.getItem('sky-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.classList.add('dark');}());
+  </script>
+
+  {# Main stylesheet — compiled by: cd theme/static_src && npm run build #}
+  <link rel="stylesheet" href="{% static 'theme/css/styles.css' %}">
+
+  {# Favicon #}
+  <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="page-wrapper {% block body_class %}{% endblock %}">
+
+  {# Accessibility: skip to main content #}
+  <a href="{% block skip_link_href %}#main-content{% endblock %}"
+     class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 btn-primary z-[9999]">
+    {% trans "Skip to main content" %}
+  </a>
+
+  {% block body %}{% endblock %}
+
+  {# Full theme.js loaded after body (inline version in <head> handles FOUC) #}
+  <script src="{% static 'js/theme.js' %}"></script>
+  <script src="{% static 'js/app.js' %}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

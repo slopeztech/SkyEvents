@@ -1,0 +1,27 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Delete radio receiver" %}{% endblock %}
+{% block topbar_title %}{% trans "Delete radio receiver" %}{% endblock %}
+
+{% block content %}
+
+<div class="min-h-[60vh] flex items-center justify-center">
+  <div class="card max-w-lg w-full">
+    <div class="card-header">
+      <h3 class="card-title text-red-600 dark:text-red-400">{% trans "Delete radio receiver" %}</h3>
+    </div>
+    <div class="card-body space-y-4">
+      <p class="text-sm text-slate-700 dark:text-slate-300">
+        {% blocktrans with name=radio.name %}Are you sure you want to delete the radio receiver <strong>{{ name }}</strong>? This action cannot be undone.{% endblocktrans %}
+      </p>
+      <form method="post" class="flex items-center justify-end gap-3 pt-2">
+        {% csrf_token %}
+        <a href="{% url 'radio:detail' radio.code %}" class="btn-ghost btn-sm">{% trans "Cancel" %}</a>
+        <button type="submit" class="btn-danger btn-sm">{% trans "Yes, delete" %}</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,393 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Web Configuration" %}{% endblock %}
+{% block topbar_title %}{% trans "Web Configuration" %}{% endblock %}
+
+{% block page_header %}
+<div class="page-header flex items-start justify-between gap-4">
+  <div>
+    <h2 class="page-title">{% trans "Web Configuration" %}</h2>
+    <p class="text-sm text-slate-400 mt-1">{% trans "Configure the texts and settings shown on the public site." %}</p>
+  </div>
+  <button type="submit" form="webconfig-form" class="btn-primary shrink-0">
+    {% trans "Save configuration" %}
+  </button>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{# ── Language tabs ────────────────────────────────────────────────────── #}
+<div class="flex gap-1 mb-6 border-b border-slate-700" role="tablist" aria-label="{% trans "Language" %}">
+  {% for lang_code, lang_name in languages %}
+    <a href="?lang={{ lang_code }}"
+       role="tab"
+       aria-selected="{% if current_lang == lang_code %}true{% else %}false{% endif %}"
+       class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+         {% if current_lang == lang_code %}
+           border-indigo-500 text-white
+         {% else %}
+           border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-500
+         {% endif %}">
+      {{ lang_name }}
+    </a>
+  {% endfor %}
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="mb-6 p-4 rounded-xl
+      {% if message.tags == 'success' %}bg-emerald-900/20 border border-emerald-700 text-emerald-300
+      {% else %}bg-red-900/20 border border-red-700 text-red-300{% endif %}
+      text-sm">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endif %}
+
+<form id="webconfig-form" method="post" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="lang" value="{{ current_lang }}">
+
+  {% if form.non_field_errors %}
+    <div class="mb-6 p-4 rounded-xl bg-red-900/20 border border-red-800 text-sm text-red-300 space-y-1">
+      {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    {# ── Left / main column ─────────────────────────────────────────────── #}
+    <div class="lg:col-span-2 space-y-6">
+
+      {# Site identity #}
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">{% trans "Site identity" %}</h3>
+        </div>
+        <div class="card-body space-y-4">
+
+          <div>
+            <label for="{{ form.site_name.id_for_label }}" class="event-form-label">
+              {{ form.site_name.label }}
+              <span class="text-red-500 ml-0.5" aria-hidden="true">*</span>
+            </label>
+            <input type="text" name="{{ form.site_name.html_name }}"
+                   id="{{ form.site_name.id_for_label }}"
+                   value="{{ form.site_name.value }}"
+                   class="event-form-input{% if form.site_name.errors %} event-form-input-error{% endif %}"
+                   maxlength="100" required>
+            {% if form.site_name.help_text %}<p class="text-xs text-slate-500 mt-1">{{ form.site_name.help_text }}</p>{% endif %}
+            {% for err in form.site_name.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label for="{{ form.page_title.id_for_label }}" class="event-form-label">
+              {{ form.page_title.label }}
+              <span class="text-red-500 ml-0.5" aria-hidden="true">*</span>
+            </label>
+            <input type="text" name="{{ form.page_title.html_name }}"
+                   id="{{ form.page_title.id_for_label }}"
+                   value="{{ form.page_title.value }}"
+                   class="event-form-input{% if form.page_title.errors %} event-form-input-error{% endif %}"
+                   maxlength="200" required>
+            {% if form.page_title.help_text %}<p class="text-xs text-slate-500 mt-1">{{ form.page_title.help_text }}</p>{% endif %}
+            {% for err in form.page_title.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+        </div>
+      </div>
+
+      {# Hero section #}
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">{% trans "Hero section" %}</h3>
+        </div>
+        <div class="card-body space-y-4">
+
+          <div>
+            <label for="{{ form.hero_badge.id_for_label }}" class="event-form-label">{{ form.hero_badge.label }}</label>
+            <input type="text" name="{{ form.hero_badge.html_name }}"
+                   id="{{ form.hero_badge.id_for_label }}"
+                   value="{{ form.hero_badge.value }}"
+                   class="event-form-input{% if form.hero_badge.errors %} event-form-input-error{% endif %}"
+                   maxlength="100">
+            {% if form.hero_badge.help_text %}<p class="text-xs text-slate-500 mt-1">{{ form.hero_badge.help_text }}</p>{% endif %}
+            {% for err in form.hero_badge.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <p class="event-form-label">{% trans "Hero title" %}</p>
+            <p class="text-xs text-slate-500 mb-2">
+              {% trans "The title is split into three parts: text before the highlighted word, the highlighted word itself, and text after it." %}
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label for="{{ form.hero_pre_highlight.id_for_label }}" class="text-xs text-slate-400 mb-1 block">{% trans "Before highlight" %}</label>
+                <input type="text" name="{{ form.hero_pre_highlight.html_name }}"
+                       id="{{ form.hero_pre_highlight.id_for_label }}"
+                       value="{{ form.hero_pre_highlight.value }}"
+                       class="event-form-input{% if form.hero_pre_highlight.errors %} event-form-input-error{% endif %}"
+                       maxlength="150">
+                {% for err in form.hero_pre_highlight.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+              </div>
+              <div>
+                <label for="{{ form.hero_highlight.id_for_label }}" class="text-xs text-slate-400 mb-1 block">{% trans "Highlighted word" %}</label>
+                <input type="text" name="{{ form.hero_highlight.html_name }}"
+                       id="{{ form.hero_highlight.id_for_label }}"
+                       value="{{ form.hero_highlight.value }}"
+                       class="event-form-input{% if form.hero_highlight.errors %} event-form-input-error{% endif %}"
+                       maxlength="50">
+                {% if form.hero_highlight.help_text %}<p class="text-xs text-indigo-400 mt-1">{{ form.hero_highlight.help_text }}</p>{% endif %}
+                {% for err in form.hero_highlight.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+              </div>
+              <div>
+                <label for="{{ form.hero_post_highlight.id_for_label }}" class="text-xs text-slate-400 mb-1 block">{% trans "After highlight" %}</label>
+                <input type="text" name="{{ form.hero_post_highlight.html_name }}"
+                       id="{{ form.hero_post_highlight.id_for_label }}"
+                       value="{{ form.hero_post_highlight.value }}"
+                       class="event-form-input{% if form.hero_post_highlight.errors %} event-form-input-error{% endif %}"
+                       maxlength="150">
+                {% for err in form.hero_post_highlight.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="{{ form.hero_subtitle.id_for_label }}" class="event-form-label">{{ form.hero_subtitle.label }}</label>
+            <textarea name="{{ form.hero_subtitle.html_name }}"
+                      id="{{ form.hero_subtitle.id_for_label }}"
+                      rows="3"
+                      class="event-form-input{% if form.hero_subtitle.errors %} event-form-input-error{% endif %}">{{ form.hero_subtitle.value }}</textarea>
+            {% for err in form.hero_subtitle.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+          {# Hero background style — visual radio picker #}
+          <div class="hero-bg-picker">
+            <p class="event-form-label">{{ form.hero_bg_style.label }}</p>
+            {% if form.hero_bg_style.help_text %}
+              <p class="text-xs text-slate-500 mb-3">{{ form.hero_bg_style.help_text }}</p>
+            {% endif %}
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              {% for radio in form.hero_bg_style %}
+                <label class="hero-bg-option">
+                  {{ radio.tag }}
+
+                  {# Small style preview icon #}
+                  {% if radio.choice_value == "grid" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h18v18H3V3Zm6 0v18m6-18v18M3 9h18M3 15h18"/></svg>
+                  {% elif radio.choice_value == "dots" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="5" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="19" cy="5" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="19" r="1.5"/><circle cx="12" cy="19" r="1.5"/><circle cx="19" cy="19" r="1.5"/></svg>
+                  {% elif radio.choice_value == "stars" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.5 4.6H18l-3.9 2.8 1.5 4.6L12 11.2l-3.6 2.8 1.5-4.6L6 6.6h4.5L12 2Z"/></svg>
+                  {% elif radio.choice_value == "meteors" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="currentColor"><path d="m15 2-4 6h3l-5 14 9-10h-4l5-10H15Z"/></svg>
+                  {% elif radio.choice_value == "aurora" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 18c2-6 6-9 10-9s8 3 10 9" stroke-linecap="round"/><path d="M7 18c1-4 3-6 5-6s4 2 5 6" stroke-linecap="round"/></svg>
+                  {% elif radio.choice_value == "nebula" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="8" opacity=".4"/><circle cx="12" cy="12" r="11" opacity=".15"/></svg>
+                  {% elif radio.choice_value == "christmas" %}
+                    <span class="text-xl leading-none">&#10052;</span>
+                  {% elif radio.choice_value == "summer" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1Zm0 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm8-5a1 1 0 0 1-1 1h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1ZM4 12a1 1 0 0 1-1 1H2a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1Zm13.66-6.66a1 1 0 0 1 0 1.41l-.71.71a1 1 0 0 1-1.41-1.41l.71-.71a1 1 0 0 1 1.41 0ZM7.05 17a1 1 0 0 1 0 1.41l-.71.71a1 1 0 0 1-1.41-1.41l.71-.71A1 1 0 0 1 7.05 17Zm10.6 0a1 1 0 0 1 1.41 0l.71.71a1 1 0 0 1-1.41 1.41l-.71-.71a1 1 0 0 1 0-1.41ZM5.64 5.34a1 1 0 0 1 1.41 0l.71.71a1 1 0 0 1-1.41 1.41l-.71-.71a1 1 0 0 1 0-1.41ZM12 20a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0v-1a1 1 0 0 1 1-1Z"/></svg>
+                  {% elif radio.choice_value == "night" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="currentColor"><path d="M21.75 15A9.75 9.75 0 0 1 9 2.25a.75.75 0 0 0-.94-.94A11.25 11.25 0 1 0 22.69 15.94a.75.75 0 0 0-.94-.94Z"/></svg>
+                  {% elif radio.choice_value == "day" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7s2 0 4-3c0 0 1 5 5 6s8 0 8 0-2 4-6 4-9.5-2.5-11-7Z" stroke-linejoin="round"/></svg>
+                  {% elif radio.choice_value == "neon" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+                  {% elif radio.choice_value == "humo" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 19c0 1.1.9 2 2 2s2-.9 2-2V7a2 2 0 0 1 4 0"/><path d="M4 15c0 1.7 1.3 3 3 3s3-1.3 3-3V5a2 2 0 0 1 4 0"/></svg>
+                  {% elif radio.choice_value == "startrails" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9" stroke-dasharray="4 3"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M12 3a9 9 0 0 1 9 9" stroke-width="2"/></svg>
+                  {% elif radio.choice_value == "orbits" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-30 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(30 12 12)"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
+                  {% elif radio.choice_value == "pulse" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" stroke-opacity=".5"/><circle cx="12" cy="12" r="11" stroke-opacity=".25"/></svg>
+                  {% elif radio.choice_value == "wave" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 12c1.5-4 3.5-4 5 0s3.5 4 5 0 3.5-4 5 0"/><path d="M2 17c1.5-4 3.5-4 5 0s3.5 4 5 0 3.5-4 5 0" stroke-opacity=".4"/></svg>
+                  {% elif radio.choice_value == "geo" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l4.33 7.5H7.67L12 3Z"/><path d="M7.67 10.5L3 18h18l-4.67-7.5"/><path d="M7.67 10.5h8.66"/></svg>
+                  {% elif radio.choice_value == "void" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" opacity=".5"/><path d="M3.5 12h17M12 3.5v17" stroke-opacity=".25"/></svg>
+                  {% elif radio.choice_value == "plasma" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2c3 4 5 4 5 8a5 5 0 0 1-10 0c0-4 2-4 5-8Z"/><path d="M7 14c-2 2-2 4 0 5"/><path d="M17 14c2 2 2 4 0 5"/></svg>
+                  {% elif radio.choice_value == "rain" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="7" y1="9" x2="5" y2="17"/><line x1="12" y1="9" x2="10" y2="17"/><line x1="17" y1="9" x2="15" y2="17"/><path d="M5 7c0-2.2 1.8-4 4-4 .7-1.8 2.4-3 4.4-3 2.9 0 5.1 2.4 4.6 5.2C19.8 5.9 21 7.4 21 9c0 2.2-1.8 4-4 4H7a4 4 0 0 1-2-7.5"/></svg>
+                  {% elif radio.choice_value == "bokeh" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="14" r="3"/><circle cx="15" cy="9" r="4.5"/><circle cx="19" cy="17" r="2"/><circle cx="4" cy="7" r="1.5" stroke-opacity=".5"/></svg>
+                  {% elif radio.choice_value == "horizon" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="2" y1="15" x2="22" y2="15"/><path d="M2 15c3-6 7-8 10-8s7 2 10 8" stroke-opacity=".4"/><circle cx="6" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="4" r="1" fill="currentColor" stroke="none" opacity=".6"/><circle cx="18" cy="7" r="1" fill="currentColor" stroke="none" opacity=".8"/></svg>
+                  {% elif radio.choice_value == "prism" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 3 L21 19 H3 Z"/><line x1="12" y1="3" x2="12" y2="19" stroke-opacity=".3"/><line x1="12" y1="19" x2="21" y2="19" stroke-opacity=".3"/></svg>
+                  {% elif radio.choice_value == "glitch" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 6h20M2 10h12M16 10h6M2 14h8M12 14h10M2 18h20" stroke-opacity=".9"/><rect x="8" y="8" width="4" height="2" fill="currentColor" stroke="none" opacity=".3"/></svg>
+                  {% elif radio.choice_value == "lattice" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l10 10-10 10L2 12Z"/><path d="M12 6l6 6-6 6-6-6Z" stroke-opacity=".5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
+                  {% elif radio.choice_value == "matrix" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="5" y1="3" x2="5" y2="13"/><line x1="5" y1="16" x2="5" y2="21"/><line x1="12" y1="3" x2="12" y2="7"/><line x1="12" y1="10" x2="12" y2="17"/><line x1="12" y1="20" x2="12" y2="21"/><line x1="19" y1="3" x2="19" y2="5"/><line x1="19" y1="8" x2="19" y2="19"/></svg>
+                  {% elif radio.choice_value == "carwindow" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="13" r="2" fill="currentColor" stroke="none" opacity=".4"/><circle cx="15" cy="11" r="2.5" fill="currentColor" stroke="none" opacity=".3"/><circle cx="19" cy="15" r="1.5" fill="currentColor" stroke="none" opacity=".4"/></svg>
+                  {% elif radio.choice_value == "comet" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="17" cy="7" r="2.5"/><line x1="15.2" y1="8.8" x2="3" y2="21"/><line x1="13.2" y1="7" x2="2" y2="12" stroke-opacity=".45"/><line x1="17" y1="9.5" x2="10" y2="21" stroke-opacity=".3"/></svg>
+                  {% elif radio.choice_value == "firefly" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M12 9.5V8M10.7 13l-1.5 1M13.3 13l1.5 1" stroke-linecap="round" stroke-width="1.2"/><circle cx="5" cy="7" r="1" fill="currentColor" stroke="none" opacity=".55"/><circle cx="19" cy="6" r="1" fill="currentColor" stroke="none" opacity=".65"/><circle cx="7" cy="18" r="1" fill="currentColor" stroke="none" opacity=".7"/><circle cx="18" cy="17" r="1" fill="currentColor" stroke="none" opacity=".45"/><circle cx="15" cy="4" r="0.8" fill="currentColor" stroke="none" opacity=".8"/></svg>
+                  {% elif radio.choice_value == "circuit" %}
+                    <svg class="w-6 h-6 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h3v8H2M8 3v3h8V3M19 8h3v8h-3M8 18v3h8v-3"/><line x1="5" y1="12" x2="8" y2="12"/><line x1="16" y1="12" x2="19" y2="12"/><circle cx="8" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>
+                  {% endif %}
+
+                  <span class="text-[11px] font-medium text-center leading-tight">{{ radio.choice_label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+            {% for err in form.hero_bg_style.errors %}<p class="event-form-error mt-2">{{ err }}</p>{% endfor %}
+          </div>
+
+        </div>
+      </div>
+
+      {# CTA section #}
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">{% trans "Call to action section" %}</h3>
+        </div>
+        <div class="card-body space-y-4">
+
+          <div>
+            <label for="{{ form.cta_title.id_for_label }}" class="event-form-label">{{ form.cta_title.label }}</label>
+            <input type="text" name="{{ form.cta_title.html_name }}"
+                   id="{{ form.cta_title.id_for_label }}"
+                   value="{{ form.cta_title.value }}"
+                   class="event-form-input{% if form.cta_title.errors %} event-form-input-error{% endif %}"
+                   maxlength="200">
+            {% for err in form.cta_title.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label for="{{ form.cta_subtitle.id_for_label }}" class="event-form-label">{{ form.cta_subtitle.label }}</label>
+            <textarea name="{{ form.cta_subtitle.html_name }}"
+                      id="{{ form.cta_subtitle.id_for_label }}"
+                      rows="3"
+                      class="event-form-input{% if form.cta_subtitle.errors %} event-form-input-error{% endif %}">{{ form.cta_subtitle.value }}</textarea>
+            {% for err in form.cta_subtitle.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    {# ── Right / sidebar column ──────────────────────────────────────────── #}
+    <div class="space-y-6">
+
+      {# Stats labels #}
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">{% trans "Stats bar labels" %}</h3>
+        </div>
+        <div class="card-body space-y-4">
+
+          <div>
+            <label for="{{ form.stats_stations_label.id_for_label }}" class="event-form-label">{{ form.stats_stations_label.label }}</label>
+            <input type="text" name="{{ form.stats_stations_label.html_name }}"
+                   id="{{ form.stats_stations_label.id_for_label }}"
+                   value="{{ form.stats_stations_label.value }}"
+                   class="event-form-input{% if form.stats_stations_label.errors %} event-form-input-error{% endif %}"
+                   maxlength="100">
+            {% for err in form.stats_stations_label.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label for="{{ form.stats_cameras_label.id_for_label }}" class="event-form-label">{{ form.stats_cameras_label.label }}</label>
+            <input type="text" name="{{ form.stats_cameras_label.html_name }}"
+                   id="{{ form.stats_cameras_label.id_for_label }}"
+                   value="{{ form.stats_cameras_label.value }}"
+                   class="event-form-input{% if form.stats_cameras_label.errors %} event-form-input-error{% endif %}"
+                   maxlength="100">
+            {% for err in form.stats_cameras_label.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label for="{{ form.stats_radios_label.id_for_label }}" class="event-form-label">{{ form.stats_radios_label.label }}</label>
+            <input type="text" name="{{ form.stats_radios_label.html_name }}"
+                   id="{{ form.stats_radios_label.id_for_label }}"
+                   value="{{ form.stats_radios_label.value }}"
+                   class="event-form-input{% if form.stats_radios_label.errors %} event-form-input-error{% endif %}"
+                   maxlength="100">
+            {% for err in form.stats_radios_label.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label for="{{ form.stats_events_label.id_for_label }}" class="event-form-label">{{ form.stats_events_label.label }}</label>
+            <input type="text" name="{{ form.stats_events_label.html_name }}"
+                   id="{{ form.stats_events_label.id_for_label }}"
+                   value="{{ form.stats_events_label.value }}"
+                   class="event-form-input{% if form.stats_events_label.errors %} event-form-input-error{% endif %}"
+                   maxlength="100">
+            {% for err in form.stats_events_label.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+        </div>
+      </div>
+
+      {# Contact / footer #}
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">{% trans "Contact & footer" %}</h3>
+        </div>
+        <div class="card-body space-y-4">
+
+          <div>
+            <label for="{{ form.contact_email.id_for_label }}" class="event-form-label">{{ form.contact_email.label }}</label>
+            <input type="email" name="{{ form.contact_email.html_name }}"
+                   id="{{ form.contact_email.id_for_label }}"
+                   value="{{ form.contact_email.value }}"
+                   class="event-form-input{% if form.contact_email.errors %} event-form-input-error{% endif %}"
+                   maxlength="254">
+            {% if form.contact_email.help_text %}<p class="text-xs text-slate-500 mt-1">{{ form.contact_email.help_text }}</p>{% endif %}
+            {% for err in form.contact_email.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label for="{{ form.footer_text.id_for_label }}" class="event-form-label">{{ form.footer_text.label }}</label>
+            <input type="text" name="{{ form.footer_text.html_name }}"
+                   id="{{ form.footer_text.id_for_label }}"
+                   value="{{ form.footer_text.value }}"
+                   class="event-form-input{% if form.footer_text.errors %} event-form-input-error{% endif %}"
+                   maxlength="255">
+            {% if form.footer_text.help_text %}<p class="text-xs text-slate-500 mt-1">{{ form.footer_text.help_text }}</p>{% endif %}
+            {% for err in form.footer_text.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var picker = document.querySelector('.hero-bg-picker');
+  if (!picker) return;
+
+  function refresh() {
+    picker.querySelectorAll('label.hero-bg-option').forEach(function (label) {
+      var input = label.querySelector('input[type="radio"]');
+      label.classList.toggle('is-checked', !!(input && input.checked));
+    });
+  }
+
+  /* Mark the server-rendered saved option on page load */
+  refresh();
+
+  /* Update instantly whenever the user picks a different option */
+  picker.addEventListener('change', refresh);
+}());
+</script>
+{% endblock %}

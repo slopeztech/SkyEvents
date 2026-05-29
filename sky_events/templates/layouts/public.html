@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block body %}
+  {% include "components/_navbar.html" %}
+
+  <main id="main-content" class="{% block content_class %}{% endblock %}">
+    {% include "components/_messages.html" %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include "components/_footer.html" %}
+{% endblock %}

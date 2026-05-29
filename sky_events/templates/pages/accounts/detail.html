@@ -1,0 +1,144 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{{ account.email }}{% endblock %}
+{% block topbar_title %}{% trans "User detail" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-start justify-between">
+  <div>
+    <h2 class="page-title">{{ account.get_full_name|default:account.email }}</h2>
+    <p class="page-subtitle">{{ account.email }}</p>
+  </div>
+  <div class="flex items-center gap-2 flex-shrink-0">
+    <a href="{% url 'accounts:edit' account.pk %}" class="btn-ghost btn-sm">{% trans "Edit" %}</a>
+    <form method="post" action="{% url 'accounts:toggle-active' account.pk %}" class="inline">
+      {% csrf_token %}
+      {% if account.is_active %}
+        <button type="submit" class="btn-ghost btn-sm text-amber-600 hover:text-amber-700">{% trans "Deactivate" %}</button>
+      {% else %}
+        <button type="submit" class="btn-ghost btn-sm text-green-600 hover:text-green-700">{% trans "Activate" %}</button>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <div class="lg:col-span-2 space-y-6">
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Profile" %}</h3>
+        <div class="flex items-center gap-2">
+          {% if account.role == 'admin' %}
+            <span class="badge badge-purple">{{ account.get_role_display }}</span>
+          {% else %}
+            <span class="badge badge-blue">{{ account.get_role_display }}</span>
+          {% endif %}
+          {% if account.is_active %}
+            <span class="badge badge-green"><span class="dot-green"></span>{% trans "Active" %}</span>
+          {% else %}
+            <span class="badge badge-red"><span class="dot-red"></span>{% trans "Inactive" %}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-body grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Email" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 break-all">{{ account.email }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Username" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ account.username }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "First name" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ account.first_name|default:"—" }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Last name" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ account.last_name|default:"—" }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Organisation" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ account.organisation|default:"—" }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Country" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ account.country|default:"—" }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Timezone" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ account.timezone|default:"—" }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Registered" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ account.created_at|date:"Y-m-d" }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Stations" %}</h3>
+        <span class="text-xs text-slate-400">{{ account.stations.count }}</span>
+      </div>
+      {% if account.stations.exists %}
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{% trans "Name" %}</th>
+                <th>{% trans "Code" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for station in account.stations.all %}
+                <tr>
+                  <td class="font-medium text-slate-900 dark:text-slate-100">{{ station.name }}</td>
+                  <td class="font-mono text-xs text-slate-500">{{ station.code }}</td>
+                  <td>
+                    {% if station.status == 'active' %}
+                      <span class="badge badge-green"><span class="dot-green"></span>{{ station.get_status_display }}</span>
+                    {% elif station.status == 'maintenance' %}
+                      <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ station.get_status_display }}</span>
+                    {% else %}
+                      <span class="badge badge-red"><span class="dot-red"></span>{{ station.get_status_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'station:detail' station.code %}" class="btn-ghost btn-xs">{% trans "View" %}</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="card-body">
+          <p class="text-sm text-slate-400">{% trans "No stations assigned." %}</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <div class="space-y-6">
+
+    <div class="card">
+      <div class="card-body text-xs text-slate-400 space-y-1.5">
+        <p>{% trans "UUID" %}: <span class="font-mono text-slate-500 break-all">{{ account.pk }}</span></p>
+        <p>{% trans "Created" %}: {{ account.created_at|date:"Y-m-d H:i" }} UTC</p>
+        <p>{% trans "Updated" %}: {{ account.updated_at|date:"Y-m-d H:i" }} UTC</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,22 @@
+{% load i18n %}
+
+<div class="flex items-center gap-1" aria-label="{% trans "Language" %}">
+  {% get_current_language as CURRENT_LANG %}
+  {% get_available_languages as LANGUAGES %}
+  {% for lang_code, lang_name in LANGUAGES %}
+    {% if lang_code == CURRENT_LANG %}
+      <span class="lang-btn-active" aria-current="true" title="{{ lang_name }}">
+        {{ lang_code|upper }}
+      </span>
+    {% else %}
+      <form method="post" action="{% url 'set_language' %}" class="inline">
+        {% csrf_token %}
+        <input type="hidden" name="language" value="{{ lang_code }}">
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <button type="submit" class="lang-btn" title="{{ lang_name }}">
+          {{ lang_code|upper }}
+        </button>
+      </form>
+    {% endif %}
+  {% endfor %}
+</div>

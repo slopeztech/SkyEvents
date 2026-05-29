@@ -1,0 +1,131 @@
+{% extends "layouts/dashboard.html" %}
+{% load i18n %}
+
+{% block title %}{{ radio.name }}{% endblock %}
+{% block topbar_title %}{% trans "Radio receiver detail" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header flex items-start justify-between">
+  <div>
+    <p class="text-xs font-mono text-indigo-500 dark:text-indigo-400 mb-1">{{ radio.code }}</p>
+    <h2 class="page-title">{{ radio.name }}</h2>
+    <p class="page-subtitle">
+      <a href="{% url 'station:detail' radio.station.code %}" class="hover:underline">{{ radio.station.name }}</a>
+      &middot; {{ radio.get_status_display }}
+    </p>
+  </div>
+  <div class="flex items-center gap-2 flex-shrink-0">
+    <a href="{% url 'radio:edit' radio.code %}" class="btn-ghost btn-sm">{% trans "Edit" %}</a>
+    <a href="{% url 'radio:delete' radio.code %}" class="btn-ghost btn-sm text-red-500 hover:text-red-700">{% trans "Delete" %}</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <div class="lg:col-span-2 space-y-6">
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{% trans "Identity" %}</h3>
+        {% if radio.status == 'active' %}
+          <span class="badge badge-green"><span class="dot-green"></span>{{ radio.get_status_display }}</span>
+        {% elif radio.status == 'maintenance' %}
+          <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ radio.get_status_display }}</span>
+        {% else %}
+          <span class="badge badge-red"><span class="dot-red"></span>{{ radio.get_status_display }}</span>
+        {% endif %}
+      </div>
+      <div class="card-body grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Name" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ radio.name }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Code" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 font-mono">{{ radio.code }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Receiver model" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ radio.receiver_model|default:"—" }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Installed" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ radio.installed_at|default:"—" }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">{% trans "RF parameters" %}</h3></div>
+      <div class="card-body grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Frequency" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ radio.frequency_mhz }} MHz</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Bandwidth" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{% if radio.bandwidth_khz %}{{ radio.bandwidth_khz }} kHz{% else %}—{% endif %}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">{% trans "Antenna" %}</h3></div>
+      <div class="card-body grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Antenna type" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ radio.antenna_type|default:"—" }}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Polarization" %}</p>
+          <p class="font-medium text-slate-800 dark:text-slate-200">{{ radio.polarization|default:"—" }}</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="space-y-6">
+
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">{% trans "Station" %}</h3></div>
+      <div class="card-body text-sm space-y-2">
+        <p class="font-medium text-slate-800 dark:text-slate-200">
+          <a href="{% url 'station:detail' radio.station.code %}" class="hover:text-indigo-600 dark:hover:text-indigo-400">{{ radio.station.name }}</a>
+        </p>
+        <p class="text-xs text-slate-400 font-mono">{{ radio.station.code }}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">{% trans "Software" %}</h3></div>
+      <div class="card-body text-sm">
+        <p class="text-slate-700 dark:text-slate-300">{{ radio.software|default:"—" }}</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body text-xs text-slate-400 space-y-1.5">
+        <p>{% trans "Created" %}: {{ radio.created_at|date:"Y-m-d H:i" }} UTC</p>
+        <p>{% trans "Updated" %}: {{ radio.updated_at|date:"Y-m-d H:i" }} UTC</p>
+      </div>
+    </div>
+
+    <div class="card border-red-200 dark:border-red-800/50">
+      <div class="card-header">
+        <h3 class="card-title text-red-600 dark:text-red-400">{% trans "Danger zone" %}</h3>
+      </div>
+      <div class="card-body">
+        <a href="{% url 'radio:delete' radio.code %}"
+           class="btn-ghost btn-sm w-full justify-center text-red-600 hover:text-red-700 border border-red-200 dark:border-red-800">
+          {% trans "Delete radio receiver" %}
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
