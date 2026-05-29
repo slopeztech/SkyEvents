@@ -143,13 +143,6 @@ EMAIL_HOST_USER=no-reply@skyevents.example.com
 EMAIL_HOST_PASSWORD=smtp_password
 EMAIL_USE_TLS=True
 
-# Storage (S3 / MinIO — remove if using local storage)
-AWS_ACCESS_KEY_ID=your_access_key
-AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_STORAGE_BUCKET_NAME=skyevents-media
-AWS_S3_REGION_NAME=eu-west-1
-AWS_S3_ENDPOINT_URL=https://s3.example.com
-
 # CORS
 CORS_ALLOWED_ORIGINS=https://skyevents.example.com
 

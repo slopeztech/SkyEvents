@@ -55,22 +55,11 @@ DATABASES = {  # type: ignore[assignment]
 }
 
 # ---------------------------------------------------------------------------
-# File storage — S3-compatible (MinIO / AWS S3)
+# File storage — local filesystem
 # ---------------------------------------------------------------------------
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
-
-AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
-AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="eu-west-1")
-AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL", default="")
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None  # Block public access; use signed URLs
-AWS_S3_CUSTOM_DOMAIN = env("AWS_S3_CUSTOM_DOMAIN", default="")
-AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
-AWS_QUERYSTRING_AUTH = True  # Signed URLs required
-AWS_QUERYSTRING_EXPIRE = 3600  # 1 hour
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+MEDIA_ROOT = env("MEDIA_ROOT", default="/srv/skyevents/media")
+MEDIA_URL = "/media/"
 
 # ---------------------------------------------------------------------------
 # Email — SMTP
