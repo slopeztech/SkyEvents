@@ -192,75 +192,98 @@ class TestScriptDataViewJSONDownload:
         assert owner.username in response["Content-Disposition"]
 
     def test_top_level_keys_present(self) -> None:
-        """JSON must have skyevents_version, generated_at, user_token, stations."""
+        """JSON must have api, station, devices, scheduler, state, logging."""
         admin = _make_admin()
         owner = _make_owner()
         _, data = self._get_json(admin, owner)
-        assert data["skyevents_version"] == "1.0"
-        assert "generated_at" in data
-        assert "user_token" in data
-        assert "stations" in data
+        assert "api" in data
+        assert "station" in data
+        assert "devices" in data
+        assert "scheduler" in data
+        assert "state" in data
+        assert "logging" in data
 
     def test_user_token_matches_model(self) -> None:
-        """user_token in JSON must equal owner.script_token."""
+        """api.script_token in JSON must equal owner.script_token."""
         admin = _make_admin()
         owner = _make_owner()
         _, data = self._get_json(admin, owner)
-        assert data["user_token"] == owner.script_token
+        assert data["api"]["script_token"] == owner.script_token
 
-    def test_empty_stations_for_user_without_stations(self) -> None:
-        """User with no stations must return stations: []."""
+    def test_api_password_is_blank(self) -> None:
+        """api.password must be an empty string (user fills it in manually)."""
         admin = _make_admin()
         owner = _make_owner()
         _, data = self._get_json(admin, owner)
-        assert data["stations"] == []
+        assert data["api"]["password"] == ""
+
+    def test_api_username_matches_model(self) -> None:
+        """api.username in JSON must equal owner.username."""
+        admin = _make_admin()
+        owner = _make_owner()
+        _, data = self._get_json(admin, owner)
+        assert data["api"]["username"] == owner.username
+
+    def test_empty_station_hash_for_user_without_stations(self) -> None:
+        """User with no stations must return station.hash_id == '' and empty devices."""
+        admin = _make_admin()
+        owner = _make_owner()
+        _, data = self._get_json(admin, owner)
+        assert data["station"]["hash_id"] == ""
+        assert data["devices"]["cameras"] == []
+        assert data["devices"]["radios"] == []
 
     def test_station_structure_in_json(self) -> None:
-        """Each station entry must include hash_id, name, code, cameras, radios."""
+        """station.hash_id must match the station; devices must have cameras/radios."""
         admin = _make_admin()
         owner = _make_owner()
         station = StationFactory(owner=owner)
         _, data = self._get_json(admin, owner)
-        assert len(data["stations"]) == 1
-        s = data["stations"][0]
-        assert s["hash_id"] == station.hash_id
-        assert s["name"] == station.name
-        assert s["code"] == station.code
-        assert "cameras" in s
-        assert "radios" in s
+        assert data["station"]["hash_id"] == station.hash_id
+        assert "cameras" in data["devices"]
+        assert "radios" in data["devices"]
 
     def test_camera_hash_id_in_json(self) -> None:
-        """Camera entries in JSON must include their hash_id."""
+        """Camera entries in JSON must include their hash_id and name."""
         admin = _make_admin()
         owner = _make_owner()
         station = StationFactory(owner=owner)
         cam = CameraFactory(station=station)
         _, data = self._get_json(admin, owner)
-        cam_entry = data["stations"][0]["cameras"][0]
+        cam_entry = data["devices"]["cameras"][0]
         assert cam_entry["hash_id"] == cam.hash_id
         assert cam_entry["name"] == cam.name
-        assert cam_entry["code"] == cam.code
+        assert "watch_path" in cam_entry
+        assert "detector" in cam_entry
 
     def test_radio_hash_id_in_json(self) -> None:
-        """Radio entries in JSON must include their hash_id."""
+        """Radio entries in JSON must include their hash_id and name."""
         admin = _make_admin()
         owner = _make_owner()
         station = StationFactory(owner=owner)
         radio = RadioReceiverFactory(station=station)
         _, data = self._get_json(admin, owner)
-        radio_entry = data["stations"][0]["radios"][0]
+        radio_entry = data["devices"]["radios"][0]
         assert radio_entry["hash_id"] == radio.hash_id
         assert radio_entry["name"] == radio.name
-        assert radio_entry["code"] == radio.code
+        assert "watch_path" in radio_entry
+        assert "detector" in radio_entry
 
-    def test_multiple_stations_in_json(self) -> None:
-        """User with multiple stations must have all of them in JSON."""
+    def test_station_param_selects_specific_station(self) -> None:
+        """?format=json&station=<hash_id> must return config for that specific station."""
         admin = _make_admin()
         owner = _make_owner()
-        StationFactory(owner=owner)
-        StationFactory(owner=owner)
-        _, data = self._get_json(admin, owner)
-        assert len(data["stations"]) == 2
+        station1 = StationFactory(owner=owner)
+        station2 = StationFactory(owner=owner)
+        client = Client()
+        client.force_login(admin)
+        url = _script_data_url(owner.pk) + f"?format=json&station={station2.hash_id}"
+        response = client.get(url)
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["station"]["hash_id"] == station2.hash_id
+        # Ensure station1 hash does not appear as the result
+        assert data["station"]["hash_id"] != station1.hash_id
 
     def test_anonymous_cannot_download_json(self) -> None:
         """Unauthenticated requests to ?format=json must be redirected."""

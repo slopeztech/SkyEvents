@@ -149,7 +149,7 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
     # ------------------------------------------------------------------
 
     def _build_script_data(self, user: User) -> dict:
-        """Build the JSON-serialisable dict that is written to the config file."""
+        """Build the overview dict used by the HTML page (station/device listing)."""
         stations_data = []
         for station in user.stations.all().order_by("name"):
             stations_data.append(
@@ -175,11 +175,75 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
                     ],
                 }
             )
+        return {"stations": stations_data}
+
+    def _build_station_config(self, user: User, station=None, request=None) -> dict:
+        """
+        Build a Reporter-compatible station_config.json for a single station.
+
+        ``password`` is intentionally left blank — the station operator must
+        fill it in before deploying the Reporter script.
+        """
+        base_url = ""
+        if request is not None:
+            base_url = f"{request.scheme}://{request.get_host()}/api/v1"
+
+        station_hash_id = station.hash_id if station is not None else ""
+        cameras: list[dict] = []
+        radios: list[dict] = []
+
+        if station is not None:
+            cameras = [
+                {
+                    "hash_id": cam.hash_id,
+                    "name": cam.name,
+                    "detector": "generic",
+                    "watch_path": "",
+                    "detector_options": {},
+                }
+                for cam in station.cameras.all().order_by("name")
+            ]
+            radios = [
+                {
+                    "hash_id": rdo.hash_id,
+                    "name": rdo.name,
+                    "detector": "generic",
+                    "watch_path": "",
+                    "detector_options": {},
+                }
+                for rdo in station.radio_receivers.all().order_by("name")
+            ]
+
         return {
-            "skyevents_version": "1.0",
-            "generated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "user_token": user.script_token,
-            "stations": stations_data,
+            "api": {
+                "base_url": base_url,
+                "username": user.username,
+                "password": "",
+                "script_token": user.script_token,
+                "token_refresh_margin_seconds": 300,
+                "timeout_seconds": 60,
+            },
+            "station": {
+                "hash_id": station_hash_id,
+            },
+            "devices": {
+                "cameras": cameras,
+                "radios": radios,
+            },
+            "scheduler": {
+                "poll_interval_seconds": 300,
+                "max_files_per_cycle": 50,
+                "requirements_poll_interval_seconds": 600,
+            },
+            "state": {
+                "db_path": "./reporter_state.db",
+            },
+            "logging": {
+                "level": "INFO",
+                "file": "./reporter.log",
+                "max_bytes": 10485760,
+                "backup_count": 5,
+            },
         }
 
     # ------------------------------------------------------------------
@@ -190,9 +254,29 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
         self.object = self.get_object()
 
         if request.GET.get("format") == "json":
-            data = self._build_script_data(self.object)
+            station_hash = request.GET.get("station", "")
+            if station_hash:
+                station = get_object_or_404(
+                    self.object.stations.prefetch_related("cameras", "radio_receivers"),
+                    hash_id=station_hash,
+                )
+            else:
+                station = (
+                    self.object.stations
+                    .prefetch_related("cameras", "radio_receivers")
+                    .order_by("name")
+                    .first()
+                )
+
+            data = self._build_station_config(self.object, station, request)
             payload = json.dumps(data, indent=2, ensure_ascii=False)
-            filename = f"skyevents_{self.object.username}_config.json"
+
+            station_code = station.code if station is not None else ""
+            if station_code:
+                filename = f"skyevents_{self.object.username}_{station_code}_config.json"
+            else:
+                filename = f"skyevents_{self.object.username}_config.json"
+
             response = HttpResponse(payload, content_type="application/json")
             # ASCII-safe filename for broad browser compatibility
             safe_name = filename.encode("ascii", errors="replace").decode("ascii")
@@ -204,8 +288,16 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         data = self._build_script_data(self.object)
-        ctx["script_data_json"] = json.dumps(data, indent=2, ensure_ascii=False)
         ctx["script_data"] = data
         ctx["cameras_total"] = sum(len(s["cameras"]) for s in data["stations"])
         ctx["radios_total"] = sum(len(s["radios"]) for s in data["stations"])
+        # JSON preview: Reporter config for the first station (alphabetically)
+        first_station = (
+            self.object.stations
+            .prefetch_related("cameras", "radio_receivers")
+            .order_by("name")
+            .first()
+        )
+        preview = self._build_station_config(self.object, first_station, self.request)
+        ctx["script_data_json"] = json.dumps(preview, indent=2, ensure_ascii=False)
         return ctx

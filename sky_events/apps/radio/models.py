@@ -162,6 +162,12 @@ class RadioReceiver(TimeStampedModel):
     def __str__(self) -> str:
         return f"{self.name} [{self.code}] {self.frequency_mhz} MHz @ {self.station.code}"
 
+    def save(self, *args, **kwargs) -> None:
+        if self._state.adding:
+            while RadioReceiver.objects.filter(hash_id=self.hash_id).exists():
+                self.hash_id = _generate_hash_id()
+        super().save(*args, **kwargs)
+
     @property
     def is_active(self) -> bool:
         """Return True if the receiver is currently operational."""

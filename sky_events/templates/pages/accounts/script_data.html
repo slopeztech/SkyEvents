@@ -48,16 +48,24 @@
         </p>
         <ul class="mt-2 text-sm text-slate-600 dark:text-slate-400 list-disc list-inside space-y-1">
           <li>
-            <strong>{% trans "user_token" %}</strong> —
+            <strong>api.script_token</strong> —
             {% trans "Unique secret that identifies this user's account. Keep it confidential." %}
           </li>
           <li>
-            <strong>{% trans "hash_id" %}</strong> —
-            {% trans "Short unique identifier for each device (station / camera / radio). Used for log correlation." %}
+            <strong>station.hash_id</strong> —
+            {% trans "Short unique identifier for the station. Used to route uploads to the correct station." %}
+          </li>
+          <li>
+            <strong>api.password</strong> —
+            {% trans "Left blank intentionally. Fill in the user's SkyEvents login password before deploying the Reporter." %}
+          </li>
+          <li>
+            <strong>devices.*.watch_path</strong> &amp; <strong>detector</strong> —
+            {% trans "Must be configured per device on the station machine (path to watch folder, detector type)." %}
           </li>
         </ul>
         <p class="mt-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
-          ⚠ {% trans "If the user_token is compromised, contact an administrator to regenerate it." %}
+          ⚠ {% trans "If the script_token is compromised, contact an administrator to regenerate it." %}
         </p>
       </div>
     </div>
@@ -95,7 +103,16 @@
           <span class="badge badge-blue">{% trans "Station" %}</span>
           <span class="font-medium text-slate-900 dark:text-slate-100">{{ station.name }}</span>
           <span class="text-slate-400 text-sm font-mono">{{ station.code }}</span>
-          <span class="ml-auto text-xs font-mono text-slate-400 select-all" title="{% trans 'Hash ID' %}">{{ station.hash_id }}</span>
+          <span class="text-xs font-mono text-slate-400 select-all" title="{% trans 'Hash ID' %}">{{ station.hash_id }}</span>
+          <a href="{% url 'accounts:script-data' account.pk %}?format=json&station={{ station.hash_id }}"
+             class="ml-auto btn-ghost btn-xs flex items-center gap-1"
+             title="{% trans 'Download station_config.json for this station' %}">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z"/>
+              <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"/>
+            </svg>
+            station_config.json
+          </a>
         </div>
 
         {% if station.cameras %}
@@ -147,7 +164,7 @@
   <div class="card-body py-4">
     <div class="flex items-center justify-between mb-3">
       <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">
-        {% trans "JSON file preview" %}
+        {% trans "station_config.json preview (first station)" %}
       </h3>
       <button type="button"
               id="copy-json-btn"

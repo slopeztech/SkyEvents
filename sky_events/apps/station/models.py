@@ -150,6 +150,12 @@ class Station(TimeStampedModel):
     def __str__(self) -> str:
         return f"{self.name} [{self.code}]"
 
+    def save(self, *args, **kwargs) -> None:
+        if self._state.adding:
+            while Station.objects.filter(hash_id=self.hash_id).exists():
+                self.hash_id = _generate_hash_id()
+        super().save(*args, **kwargs)
+
     @property
     def is_active(self) -> bool:
         """Return True if the station is currently operational."""

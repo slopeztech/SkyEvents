@@ -192,6 +192,12 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         """Return the user's first name, or username as fallback."""
         return self.first_name or self.username
 
+    def save(self, *args, **kwargs) -> None:
+        if self._state.adding:
+            while User.objects.filter(script_token=self.script_token).exists():
+                self.script_token = _generate_script_token()
+        super().save(*args, **kwargs)
+
     @property
     def is_admin(self) -> bool:
         """Return True if this user has the ADMIN role."""
