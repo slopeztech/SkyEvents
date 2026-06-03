@@ -4,13 +4,18 @@
 {% block title %}[{{ event.code }}] {{ event.name }}{% endblock %}
 {% block topbar_title %}{% trans "Event detail" %}{% endblock %}
 
+{% block head_extra %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+{% endblock %}
+
 {% block content %}
 
 <div class="page-header flex items-start justify-between">
   <div>
     <p class="text-xs font-mono text-indigo-500 dark:text-indigo-400 mb-1">{{ event.code }}</p>
     <h2 class="page-title">{{ event.name }}</h2>
-    <p class="page-subtitle">{{ event.get_event_type_display }} · {{ event.detected_at|date:"Y-m-d H:i" }} UTC</p>
+    <p class="page-subtitle">{{ event.get_event_type_display }} &middot; {{ event.detected_at|date:"Y-m-d H:i" }} UTC</p>
   </div>
   {% if request.user.role == 'admin' %}
     <div class="flex items-center gap-2 flex-shrink-0">
@@ -26,6 +31,23 @@
     </div>
   {% endif %}
 </div>
+
+{# ── Tab navigation ───────────────────────────────────────────────────── #}
+<div class="flex gap-0 mb-6 border-b border-slate-200 dark:border-slate-700">
+  <button data-tab="summary"
+          class="detail-tab px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors
+                 border-indigo-500 text-indigo-600 dark:text-indigo-400">
+    {% trans "Summary" %}
+  </button>
+  <button data-tab="map"
+          class="detail-tab px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors
+                 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500">
+    {% trans "Map" %}
+  </button>
+</div>
+
+{# ── Tab: Summary ─────────────────────────────────────────────────────── #}
+<div id="panel-summary" class="detail-panel">
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -136,7 +158,7 @@
                 <tr>
                   <th>{% trans "Station" %}</th>
                   <th>{% trans "Device" %}</th>
-                  <th>{% trans "Recorded at (UTC)" %}</th>
+                  <th>{% trans "Detected at (UTC)" %}</th>
                   <th>{% trans "Duration" %}</th>
                   <th>{% trans "Files" %}</th>
                   <th></th>
@@ -147,10 +169,10 @@
                   <tr>
                     <td class="font-medium text-slate-800 dark:text-slate-200">{{ rep.station.name }}</td>
                     <td class="text-sm text-slate-500">
-                      {% if rep.camera %}{{ rep.camera.name }}{% elif rep.radio_receiver %}{{ rep.radio_receiver.name }}{% else %}—{% endif %}
+                      {% if rep.camera %}{{ rep.camera.name }}{% elif rep.radio_receiver %}{{ rep.radio_receiver.name }}{% else %}&mdash;{% endif %}
                     </td>
                     <td class="tabular-nums text-sm text-slate-600 dark:text-slate-400">{{ rep.recorded_at|date:"Y-m-d H:i" }}</td>
-                    <td class="tabular-nums text-sm text-slate-500">{{ rep.duration_ms|default:"—" }}{% if rep.duration_ms %} ms{% endif %}</td>
+                    <td class="tabular-nums text-sm text-slate-500">{{ rep.duration_ms|default:"&mdash;" }}{% if rep.duration_ms %} ms{% endif %}</td>
                     <td class="tabular-nums text-sm text-slate-500">{{ rep.files.count }}</td>
                     <td>
                       <a href="{% url 'reports:detail' rep.pk %}" class="btn-ghost btn-xs">{% trans "View" %}</a>
@@ -187,7 +209,7 @@
           {% for cam in event.cameras.all %}
             <li class="px-5 py-3">
               <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ cam.name }}</p>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">{{ cam.code }} · {{ cam.station.name }}</p>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">{{ cam.code }} &middot; {{ cam.station.name }}</p>
             </li>
           {% endfor %}
         </ul>
@@ -208,7 +230,7 @@
           {% for radio in event.radio_receivers.all %}
             <li class="px-5 py-3">
               <p class="text-sm font-medium text-slate-800 dark:text-slate-200">{{ radio.name }}</p>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">{{ radio.code }} · {{ radio.station.name }}</p>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">{{ radio.code }} &middot; {{ radio.station.name }}</p>
             </li>
           {% endfor %}
         </ul>
@@ -243,7 +265,7 @@
                 <li class="px-5 py-3 space-y-0.5">
                   <p class="text-sm font-medium text-slate-800 dark:text-slate-200">
                     {{ notice.name }}
-                    <span class="ml-1 text-xs text-slate-400">· {{ notice.observation_date }}</span>
+                    <span class="ml-1 text-xs text-slate-400">&middot; {{ notice.observation_date }}</span>
                   </p>
                   <p class="text-xs text-slate-500">{{ notice.location }}</p>
                   <p class="text-xs">
@@ -279,4 +301,125 @@
 
 </div>
 
+</div>{# /panel-summary #}
+
+{# ── Tab: Map ─────────────────────────────────────────────────────────── #}
+<div id="panel-map" class="detail-panel hidden">
+  <div class="card overflow-hidden">
+    <div id="event-map" style="height:600px;"></div>
+  </div>
+</div>
+
 {% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin="anonymous"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ── Leaflet map data ───────────────────────────────────────────── */
+  var stations = {{ map_stations_json|safe }} || [];
+
+  /* ── Tab switching ──────────────────────────────────────────────── */
+  var ACT   = ['border-indigo-500','text-indigo-600','dark:text-indigo-400'];
+  var INACT = ['border-transparent','text-slate-500'];
+  var tabs  = document.querySelectorAll('.detail-tab');
+  var panels = document.querySelectorAll('.detail-panel');
+  var mapReady = false;
+  var leafletMap;
+
+  function activateTab(name) {
+    tabs.forEach(function (btn) {
+      var on = btn.dataset.tab === name;
+      ACT.forEach(function (c) { btn.classList.toggle(c, on); });
+      INACT.forEach(function (c) { btn.classList.toggle(c, !on); });
+    });
+    panels.forEach(function (p) {
+      p.classList.toggle('hidden', p.id !== 'panel-' + name);
+    });
+    if (name === 'map') {
+      if (!mapReady) { initMap(); }
+      else { leafletMap.invalidateSize(); }
+    }
+    history.replaceState(null, '', location.pathname + '#' + name);
+  }
+
+  tabs.forEach(function (btn) {
+    btn.addEventListener('click', function () { activateTab(btn.dataset.tab); });
+  });
+
+  if (location.hash === '#map') { activateTab('map'); }
+
+  /* ── Leaflet map ────────────────────────────────────────────────── */
+
+  function initMap() {
+    mapReady = true;
+    leafletMap = L.map('event-map').setView(
+      [{{ map_center_lat }}, {{ map_center_lng }}],
+      {{ map_default_zoom }}
+    );
+
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    });
+
+    var satellite = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        attribution: 'Tiles &copy; Esri &mdash; Esri, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP',
+        maxZoom: 19
+      }
+    ).addTo(leafletMap);
+
+    L.control.layers({'{% trans "Satellite" %}': satellite, 'OpenStreetMap': osm}).addTo(leafletMap);
+
+    var bounds = [];
+
+    stations.forEach(function (st) {
+      bounds.push([st.lat, st.lng]);
+
+      var rows = st.reports.length
+        ? st.reports.map(function (rep) {
+            return '<tr>'
+              + '<td style="padding:2px 8px 2px 0;"><a href="' + rep.url
+              + '" style="color:#6366f1;text-decoration:underline;font-size:12px;">'
+              + rep.recorded_at + '</a></td>'
+              + '<td style="padding:2px 8px 2px 0;font-size:12px;">' + (rep.device || '&mdash;') + '</td>'
+              + '<td style="padding:2px 0;font-size:12px;">' + rep.status + '</td>'
+              + '</tr>';
+          }).join('')
+        : '<tr><td colspan="3" style="color:#9ca3af;font-size:12px;">{% trans "No reports" %}</td></tr>';
+
+      var content = '<div style="min-width:280px;">'
+        + '<p style="font-weight:700;font-size:13px;margin:0 0 6px;">' + st.name
+        + ' <span style="font-family:monospace;color:#9ca3af;font-size:11px;">[' + st.code + ']</span></p>'
+        + '<table style="width:100%;border-collapse:collapse;">'
+        + '<thead><tr style="color:#6b7280;">'
+        + '<th style="text-align:left;font-size:11px;padding-bottom:3px;">{% trans "Detected at" %}</th>'
+        + '<th style="text-align:left;font-size:11px;padding-bottom:3px;">{% trans "Device" %}</th>'
+        + '<th style="text-align:left;font-size:11px;padding-bottom:3px;">{% trans "Status" %}</th>'
+        + '</tr></thead>'
+        + '<tbody>' + rows + '</tbody>'
+        + '</table></div>';
+
+      var marker = L.marker([st.lat, st.lng])
+        .bindPopup(content, {maxWidth: 360});
+      marker.on('mouseover', function () { this.openPopup(); });
+      marker.addTo(leafletMap);
+    });
+
+    if (bounds.length === 1) {
+      leafletMap.setView(bounds[0], 10);
+    } else if (bounds.length > 1) {
+      leafletMap.fitBounds(bounds, {padding: [50, 50]});
+    }
+  }
+
+}());
+</script>
+{% endblock %}
+

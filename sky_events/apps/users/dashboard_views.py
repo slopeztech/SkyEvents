@@ -1,4 +1,4 @@
-"""
+﻿"""
 Dashboard CRUD views for user management (admin only).
 
 @file   sky_events/apps/users/dashboard_views.py
@@ -130,8 +130,8 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
     """
     Renders (or downloads) the script configuration file for a user.
 
-    GET  /accounts/<pk>/script-data/           → HTML preview page
-    GET  /accounts/<pk>/script-data/?format=json → JSON file download
+    GET  /accounts/<pk>/script-data/           --> HTML preview page
+    GET  /accounts/<pk>/script-data/?format=json --> JSON file download
     """
 
     model = User
@@ -162,6 +162,7 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
                             "hash_id": cam.hash_id,
                             "name": cam.name,
                             "code": cam.code,
+                            "detector": cam.detector,
                         }
                         for cam in station.cameras.all().order_by("name")
                     ],
@@ -170,6 +171,7 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
                             "hash_id": rdo.hash_id,
                             "name": rdo.name,
                             "code": rdo.code,
+                            "detector": rdo.detector,
                         }
                         for rdo in station.radio_receivers.all().order_by("name")
                     ],
@@ -181,7 +183,7 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
         """
         Build a Reporter-compatible station_config.json for a single station.
 
-        ``password`` is intentionally left blank — the station operator must
+        ``password`` is intentionally left blank -- the station operator must
         fill it in before deploying the Reporter script.
         """
         base_url = ""
@@ -197,7 +199,7 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
                 {
                     "hash_id": cam.hash_id,
                     "name": cam.name,
-                    "detector": "generic",
+                    "detector": cam.detector,
                     "watch_path": "",
                     "detector_options": {},
                 }
@@ -207,7 +209,7 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
                 {
                     "hash_id": rdo.hash_id,
                     "name": rdo.name,
-                    "detector": "generic",
+                    "detector": rdo.detector,
                     "watch_path": "",
                     "detector_options": {},
                 }
@@ -217,7 +219,7 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
         return {
             "api": {
                 "base_url": base_url,
-                "username": user.username,
+                "email": user.email,
                 "password": "",
                 "script_token": user.script_token,
                 "token_refresh_margin_seconds": 300,
@@ -231,9 +233,9 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
                 "radios": radios,
             },
             "scheduler": {
-                "poll_interval_seconds": 300,
+                "poll_interval_seconds": 10,
                 "max_files_per_cycle": 50,
-                "requirements_poll_interval_seconds": 600,
+                "requirements_poll_interval_seconds": 15,
             },
             "state": {
                 "db_path": "./reporter_state.db",
@@ -300,4 +302,5 @@ class ScriptDataView(AdminRequiredMixin, DetailView):
         )
         preview = self._build_station_config(self.object, first_station, self.request)
         ctx["script_data_json"] = json.dumps(preview, indent=2, ensure_ascii=False)
+        ctx["script_config_dict"] = preview
         return ctx

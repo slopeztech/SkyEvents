@@ -42,6 +42,17 @@ class CameraType(models.TextChoices):
     WIDE = "wide", _("Wide-angle")
 
 
+class CameraDetector(models.TextChoices):
+    """Reporter detector software for this camera."""
+
+    GENERIC = "generic", _("Generic")
+    UFOCAPTURE = "ufocapture", _("UFOCapture")
+    RMS = "rms", _("RMS")
+    ALLSKEYE = "allskeye", _("AllSkyEye")
+    METEORDL = "meteordl", _("MeteorDL")
+    METREC = "metrec", _("MetRec")
+
+
 class Camera(TimeStampedModel):
     """
     An optical camera installed at an observation station.
@@ -78,6 +89,13 @@ class Camera(TimeStampedModel):
         editable=False,
         verbose_name=_("Hash ID"),
         help_text=_("Short unique identifier used in script configuration files."),
+    )
+    detector: models.CharField = models.CharField(
+        max_length=32,
+        choices=CameraDetector.choices,
+        default=CameraDetector.GENERIC,
+        verbose_name=_("Detector"),
+        help_text=_("Reporter capture software used by this camera."),
     )
     camera_type: models.CharField = models.CharField(
         max_length=16,

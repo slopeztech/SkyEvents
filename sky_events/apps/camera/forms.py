@@ -22,6 +22,7 @@ class CameraForm(forms.ModelForm):
             "station",
             "name",
             "code",
+            "detector",
             "camera_type",
             "model_name",
             "sensor_type",

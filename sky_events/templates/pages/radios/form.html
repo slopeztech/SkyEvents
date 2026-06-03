@@ -150,6 +150,25 @@
         </div>
       </div>
 
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">{% trans "Reporter" %}</h3></div>
+        <div class="card-body space-y-4">
+          <div>
+            <label for="{{ form.detector.id_for_label }}" class="event-form-label">
+              {{ form.detector.label }}<span class="text-red-500 ml-0.5">*</span>
+            </label>
+            <select name="detector" id="{{ form.detector.id_for_label }}"
+                    class="event-form-select{% if form.detector.errors %} event-form-input-error{% endif %}">
+              {% for val, label in form.fields.detector.choices %}
+                <option value="{{ val }}"{% if form.detector.value == val %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{% trans "Capture software used by the Reporter script for this radio receiver." %}</p>
+            {% for err in form.detector.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
       <div class="sticky bottom-6">
         <button type="submit" class="btn-primary w-full justify-center">{{ submit_label }}</button>
       </div>

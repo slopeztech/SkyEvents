@@ -383,8 +383,12 @@ msgid "Events"
 msgstr "Eventos"
 
 #: .\sky_events\apps\events\forms.py:31
+#: .\sky_events\apps\reports\forms.py:25
 #: .\sky_events\templates\pages\events\detail.html:53
+#: .\sky_events\templates\pages\events\detail.html:139
 #: .\sky_events\templates\pages\events\list.html:57
+#: .\sky_events\templates\pages\reports\detail.html:61
+#: .\sky_events\templates\pages\reports\list.html:57
 msgid "Detected at (UTC)"
 msgstr "Detectado a las (UTC)"
 
@@ -836,13 +840,6 @@ msgstr "Receptor de radio eliminado."
 msgid "Reports"
 msgstr "Informes"
 
-#: .\sky_events\apps\reports\forms.py:25
-#: .\sky_events\templates\pages\events\detail.html:139
-#: .\sky_events\templates\pages\reports\detail.html:61
-#: .\sky_events\templates\pages\reports\list.html:57
-msgid "Recorded at (UTC)"
-msgstr "Registrado a las (UTC)"
-
 #: .\sky_events\apps\reports\forms.py:76
 msgid "— Not linked yet —"
 msgstr "— Sin vincular aún —"
@@ -937,12 +934,12 @@ msgid "Radio receiver that detected this echo (leave blank for optical-only)."
 msgstr "Receptor de radio que detectó este eco (dejar en blanco si es solo óptico)."
 
 #: .\sky_events\apps\reports\models.py:99
-msgid "recorded at (UTC)"
-msgstr "registrado a las (UTC)"
+msgid "detected at (UTC)"
+msgstr "detectado a las (UTC)"
 
 #: .\sky_events\apps\reports\models.py:101
-msgid "UTC timestamp when the device first detected the event."
-msgstr "Marca de tiempo UTC cuando el dispositivo detectó por primera vez el evento."
+msgid "UTC timestamp when the device first detected the event (parsed from the filename, not the upload time)."
+msgstr "Marca de tiempo UTC de la detección en la estación (extraída del nombre del archivo, no de la hora de subida)."
 
 #: .\sky_events\apps\reports\models.py:107
 msgid "Duration of the detection in milliseconds."

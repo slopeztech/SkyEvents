@@ -22,7 +22,7 @@ class StationReportForm(forms.ModelForm):
     """Create / edit a StationReport from the admin dashboard."""
 
     recorded_at = forms.DateTimeField(
-        label=_("Recorded at (UTC)"),
+        label=_("Detected at (UTC)"),
         widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
         input_formats=["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M"],
     )

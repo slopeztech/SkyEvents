@@ -97,9 +97,9 @@ class StationReport(TimeStampedModel):
 
     # --- Detection timing -------------------------------------------------
     recorded_at = models.DateTimeField(
-        _("recorded at (UTC)"),
+        _("detected at (UTC)"),
         db_index=True,
-        help_text=_("UTC timestamp when the device first detected the event."),
+        help_text=_("UTC timestamp when the device first detected the event (parsed from the filename, not the upload time)."),
     )
     duration_ms = models.PositiveIntegerField(
         _("duration (ms)"),
@@ -236,6 +236,15 @@ class MediaRequirement(TimeStampedModel):
         on_delete=models.CASCADE,
         related_name="media_requirements",
         verbose_name=_("station"),
+    )
+    report_file = models.ForeignKey(
+        "ReportFile",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="requirements",
+        verbose_name=_("report file"),
+        help_text=_("The specific report file this requirement is for, if any."),
     )
     requested_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

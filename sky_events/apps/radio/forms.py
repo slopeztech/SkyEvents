@@ -22,6 +22,7 @@ class RadioReceiverForm(forms.ModelForm):
             "station",
             "name",
             "code",
+            "detector",
             "receiver_model",
             "frequency_mhz",
             "bandwidth_khz",

@@ -58,7 +58,7 @@
           </p>
         </div>
         <div>
-          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Recorded at (UTC)" %}</p>
+          <p class="text-slate-400 dark:text-slate-500 text-xs mb-1">{% trans "Detected at (UTC)" %}</p>
           <p class="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{{ report.recorded_at|date:"Y-m-d H:i:s" }}</p>
         </div>
         {% if report.duration_ms is not None %}
@@ -97,50 +97,101 @@
       </div>
 
       {% if report.files.exists %}
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>{% trans "Type" %}</th>
-                <th>{% trans "Filename" %}</th>
-                <th>{% trans "Size" %}</th>
-                <th>{% trans "Description" %}</th>
-                <th>{% trans "Available" %}</th>
-                {% if request.user.role == 'admin' %}<th></th>{% endif %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for f in report.files.all %}
-                <tr>
-                  <td>
-                    <span class="badge">{{ f.get_file_type_display }}</span>
-                  </td>
-                  <td class="font-mono text-xs text-slate-600 dark:text-slate-400 break-all">{{ f.filename }}</td>
-                  <td class="tabular-nums text-sm text-slate-500">{{ f.file_size_display }}</td>
-                  <td class="text-sm text-slate-500">{{ f.description|default:"—" }}</td>
-                  <td>
-                    {% if f.is_available %}
-                      <span class="badge badge-green"><span class="dot-green"></span>{% trans "Yes" %}</span>
-                    {% else %}
-                      <span class="badge badge-red"><span class="dot-red"></span>{% trans "No" %}</span>
-                    {% endif %}
-                  </td>
-                  {% if request.user.role == 'admin' %}
-                    <td>
-                      <form method="post" action="{% url 'reports:file_delete' report.pk f.pk %}">
+        <div class="divide-y divide-slate-100 dark:divide-slate-700">
+          {% for f in report.files.all %}
+            <div class="p-4 space-y-3">
+
+              {# File metadata row #}
+              <div class="flex flex-wrap items-start gap-3">
+                <span class="badge mt-0.5">{{ f.get_file_type_display }}</span>
+                <div class="flex-1 min-w-0">
+                  <p class="font-mono text-xs text-slate-600 dark:text-slate-400 break-all">{{ f.filename }}</p>
+                  <p class="text-xs text-slate-400 mt-0.5">
+                    {{ f.file_size_display }}{% if f.description %} · {{ f.description }}{% endif %}
+                  </p>
+                </div>
+                {% if request.user.role == 'admin' %}
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    {# Check if any requirement has attachments #}
+                    {% with all_reqs=f.requirements.all %}
+                      {% for req in all_reqs %}{% for att in req.attachments.all %}{% if forloop.parentloop.first and forloop.first %}
+                        {# has_attachments = True — handled below in the viewer loop #}
+                      {% endif %}{% endfor %}{% endfor %}
+                      {# Pending badge #}
+                      {% for req in all_reqs %}
+                        {% if req.status == 'pending' %}
+                          <span class="badge badge-yellow text-xs"><span class="dot-yellow"></span>{% trans "Requested" %}</span>
+                        {% endif %}
+                      {% endfor %}
+                      {# Request / Re-request button — only show when no fulfilled attachments exist #}
+                      {% with has_attachments=False %}
+                        {% for req in all_reqs %}{% for att in req.attachments.all %}
+                          {# mark has_attachments via a separate counter approach isn't possible cleanly #}
+                        {% endfor %}{% endfor %}
+                      {% endwith %}
+                      <form method="post" action="{% url 'reports:file_request' report.pk f.pk %}">
                         {% csrf_token %}
-                        <button type="submit"
-                                class="btn-ghost btn-xs text-red-500 hover:text-red-700"
-                                onclick="return confirm('{% trans "Remove this file?" %}')">
-                          {% trans "Remove" %}
-                        </button>
+                        <button type="submit" class="btn-ghost btn-xs">{% trans "Request" %}</button>
                       </form>
-                    </td>
-                  {% endif %}
-                </tr>
+                    {% endwith %}
+                  </div>
+                {% endif %}
+              </div>
+
+              {# Uploaded attachments viewer — iterate all requirements → attachments #}
+              {% for req in f.requirements.all %}
+                {% for att in req.attachments.all %}
+                  <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-3 space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="text-xs text-slate-500">
+                        {% trans "Uploaded" %} {{ att.created_at|date:"Y-m-d H:i" }} UTC
+                        {% if att.file_size_bytes %} · {{ att.file_size_bytes|filesizeformat }}{% endif %}
+                      </span>
+                      {% if request.user.role == 'admin' and att.file %}
+                        <form method="post" action="{% url 'reports:attachment_delete' report.pk f.pk att.pk %}">
+                          {% csrf_token %}
+                          <button type="submit"
+                                  class="btn-ghost btn-xs text-red-500 hover:text-red-700 flex-shrink-0"
+                                  onclick="return confirm('{% trans "Delete this file from the server?" %}')">
+                            {% trans "Delete" %}
+                          </button>
+                        </form>
+                      {% endif %}
+                    </div>
+                    {# Media viewer — only if file still exists on server #}
+                    {% if att.file %}
+                      {% if att.file_type == 'video' %}
+                        <video controls class="w-full max-h-80 rounded bg-black"
+                               src="{{ att.file.url }}" preload="metadata">
+                          {% trans "Your browser does not support HTML5 video." %}
+                        </video>
+                      {% elif att.file_type == 'image' or att.file_type == 'spectrogram' %}
+                        <a href="{{ att.file.url }}" target="_blank" rel="noopener noreferrer">
+                          <img src="{{ att.file.url }}" alt="{{ att.original_path }}"
+                               class="max-w-full max-h-80 rounded object-contain mx-auto block">
+                        </a>
+                      {% elif att.file_type == 'audio' %}
+                        <audio controls class="w-full" src="{{ att.file.url }}" preload="metadata">
+                          {% trans "Your browser does not support HTML5 audio." %}
+                        </audio>
+                      {% else %}
+                        <a href="{{ att.file.url }}" class="btn-ghost btn-xs inline-flex items-center gap-1" download>
+                          <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z"/>
+                            <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"/>
+                          </svg>
+                          {% trans "Download" %}
+                        </a>
+                      {% endif %}
+                    {% else %}
+                      <p class="text-xs text-slate-400 italic">{% trans "File deleted from server — can be re-requested." %}</p>
+                    {% endif %}
+                  </div>
+                {% endfor %}
               {% endfor %}
-            </tbody>
-          </table>
+
+            </div>
+          {% endfor %}
         </div>
       {% else %}
         <div class="card-body">

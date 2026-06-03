@@ -40,44 +40,50 @@
               {{ form.station.label }}
               <span class="text-red-500 ml-0.5" aria-hidden="true">*</span>
             </label>
+            {% with sv=form.station.value|stringformat:"s" %}
             <select name="station" id="{{ form.station.id_for_label }}"
                     class="event-form-select{% if form.station.errors %} event-form-input-error{% endif %}"
                     required>
               <option value="">—</option>
               {% for val, label in form.fields.station.choices %}
                 {% if val %}
-                  <option value="{{ val }}"{% if form.station.value == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+                  <option value="{{ val }}"{% if sv == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
                 {% endif %}
               {% endfor %}
             </select>
+            {% endwith %}
             {% for err in form.station.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label for="{{ form.camera.id_for_label }}" class="event-form-label">{{ form.camera.label }}</label>
+              {% with cv=form.camera.value|stringformat:"s" %}
               <select name="camera" id="{{ form.camera.id_for_label }}"
                       class="event-form-select{% if form.camera.errors %} event-form-input-error{% endif %}">
                 <option value="">{{ form.fields.camera.empty_label }}</option>
                 {% for val, label in form.fields.camera.choices %}
                   {% if val %}
-                    <option value="{{ val }}"{% if form.camera.value == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+                    <option value="{{ val }}"{% if cv == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
                   {% endif %}
                 {% endfor %}
               </select>
+              {% endwith %}
               {% for err in form.camera.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
             </div>
             <div>
               <label for="{{ form.radio_receiver.id_for_label }}" class="event-form-label">{{ form.radio_receiver.label }}</label>
+              {% with rv=form.radio_receiver.value|stringformat:"s" %}
               <select name="radio_receiver" id="{{ form.radio_receiver.id_for_label }}"
                       class="event-form-select{% if form.radio_receiver.errors %} event-form-input-error{% endif %}">
                 <option value="">{{ form.fields.radio_receiver.empty_label }}</option>
                 {% for val, label in form.fields.radio_receiver.choices %}
                   {% if val %}
-                    <option value="{{ val }}"{% if form.radio_receiver.value == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+                    <option value="{{ val }}"{% if rv == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
                   {% endif %}
                 {% endfor %}
               </select>
+              {% endwith %}
               {% for err in form.radio_receiver.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
             </div>
           </div>
@@ -94,7 +100,7 @@
               <span class="text-red-500 ml-0.5" aria-hidden="true">*</span>
             </label>
             <input type="datetime-local" name="recorded_at" id="{{ form.recorded_at.id_for_label }}"
-                   value="{{ form.recorded_at.value|default:'' }}"
+                   value="{% if form.recorded_at.value %}{{ form.recorded_at.value|date:"Y-m-d\TH:i" }}{% endif %}"
                    class="event-form-input{% if form.recorded_at.errors %} event-form-input-error{% endif %}"
                    required>
             {% for err in form.recorded_at.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
@@ -129,25 +135,29 @@
         <div class="card-body space-y-4">
           <div>
             <label for="{{ form.status.id_for_label }}" class="event-form-label">{{ form.status.label }}</label>
+            {% with stv=form.status.value %}
             <select name="status" id="{{ form.status.id_for_label }}"
                     class="event-form-select{% if form.status.errors %} event-form-input-error{% endif %}">
               {% for val, label in form.fields.status.choices %}
-                <option value="{{ val }}"{% if form.status.value == val %} selected{% endif %}>{{ label }}</option>
+                <option value="{{ val }}"{% if stv == val %} selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
+            {% endwith %}
             {% for err in form.status.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
           </div>
           <div>
             <label for="{{ form.event.id_for_label }}" class="event-form-label">{{ form.event.label }}</label>
+            {% with ev=form.event.value|stringformat:"s" %}
             <select name="event" id="{{ form.event.id_for_label }}"
                     class="event-form-select{% if form.event.errors %} event-form-input-error{% endif %}">
               <option value="">{{ form.fields.event.empty_label }}</option>
               {% for val, label in form.fields.event.choices %}
                 {% if val %}
-                  <option value="{{ val }}"{% if form.event.value == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+                  <option value="{{ val }}"{% if ev == val|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
                 {% endif %}
               {% endfor %}
             </select>
+            {% endwith %}
             {% for err in form.event.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}
           </div>
         </div>

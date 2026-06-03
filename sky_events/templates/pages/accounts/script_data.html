@@ -1,12 +1,12 @@
 {% extends "layouts/dashboard.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Script data" %} — {{ account.email }}{% endblock %}
+{% block title %}{% trans "Script data" %} â€” {{ account.email }}{% endblock %}
 {% block topbar_title %}{% trans "Script data" %}{% endblock %}
 
 {% block content %}
 
-{# ── Page header ──────────────────────────────────────────────────────────── #}
+{# â”€â”€ Page header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
 <div class="page-header flex items-center justify-between">
   <div>
     <h2 class="page-title">{% trans "Script configuration file" %}</h2>
@@ -27,7 +27,7 @@
   </div>
 </div>
 
-{# ── Help panel ───────────────────────────────────────────────────────────── #}
+{# â”€â”€ Help panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
 <div class="card mb-6 border-l-4 border-indigo-500 dark:border-indigo-400">
   <div class="card-body py-5 space-y-3">
     <div class="flex items-start gap-3">
@@ -48,31 +48,31 @@
         </p>
         <ul class="mt-2 text-sm text-slate-600 dark:text-slate-400 list-disc list-inside space-y-1">
           <li>
-            <strong>api.script_token</strong> —
+            <strong>api.script_token</strong> â€”
             {% trans "Unique secret that identifies this user's account. Keep it confidential." %}
           </li>
           <li>
-            <strong>station.hash_id</strong> —
+            <strong>station.hash_id</strong> â€”
             {% trans "Short unique identifier for the station. Used to route uploads to the correct station." %}
           </li>
           <li>
-            <strong>api.password</strong> —
+            <strong>api.password</strong> â€”
             {% trans "Left blank intentionally. Fill in the user's SkyEvents login password before deploying the Reporter." %}
           </li>
           <li>
-            <strong>devices.*.watch_path</strong> &amp; <strong>detector</strong> —
+            <strong>devices.*.watch_path</strong> &amp; <strong>detector</strong> â€”
             {% trans "Must be configured per device on the station machine (path to watch folder, detector type)." %}
           </li>
         </ul>
         <p class="mt-2 text-xs text-amber-600 dark:text-amber-400 font-medium">
-          ⚠ {% trans "If the script_token is compromised, contact an administrator to regenerate it." %}
+          âš  {% trans "If the script_token is compromised, contact an administrator to regenerate it." %}
         </p>
       </div>
     </div>
   </div>
 </div>
 
-{# ── Summary cards ────────────────────────────────────────────────────────── #}
+{# â”€â”€ Summary cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
   <div class="card">
     <div class="card-body py-4 text-center">
@@ -94,7 +94,7 @@
   </div>
 </div>
 
-{# ── Device overview ──────────────────────────────────────────────────────── #}
+{# â”€â”€ Device overview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
 {% if script_data.stations %}
   {% for station in script_data.stations %}
     <div class="card mb-4">
@@ -159,6 +159,44 @@
   </div>
 {% endif %}
 
+{# ── Data for JS ─────────────────────────────────────────────────────────── #}
+{{ script_config_dict|json_script:"base-script-data" }}
+{{ script_data|json_script:"devices-meta" }}
+
+{# ── Scheduler config ───────────────────────────────────────────────────── #}
+<div class="card mb-6" id="scheduler-config-card">
+  <div class="card-header">
+    <h3 class="card-title">{% trans "Scheduler" %}</h3>
+    <p class="text-xs text-slate-500 mt-0.5">{% trans "How often the Reporter polls for new files and requirements." %}</p>
+  </div>
+  <div class="card-body py-4 space-y-3">
+    <div class="flex items-center gap-3">
+      <span class="text-xs font-mono text-slate-500 w-80 flex-shrink-0">poll_interval_seconds</span>
+      <input type="number" id="sched-poll" class="event-form-input text-xs py-1 w-28" value="10" min="1">
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-xs font-mono text-slate-500 w-80 flex-shrink-0">max_files_per_cycle</span>
+      <input type="number" id="sched-max-files" class="event-form-input text-xs py-1 w-28" value="50" min="1">
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-xs font-mono text-slate-500 w-80 flex-shrink-0">requirements_poll_interval_seconds</span>
+      <input type="number" id="sched-req-poll" class="event-form-input text-xs py-1 w-28" value="15" min="1">
+    </div>
+  </div>
+</div>
+
+{% if script_data.stations %}
+{# ── Device options form ────────────────────────────────────────────────── #}
+<div class="card mb-6" id="detector-options-card">
+  <div class="card-header">
+    <h3 class="card-title">{% trans "Configure devices" %}</h3>
+    <p class="text-xs text-slate-500 mt-0.5">{% trans "Set watch_path and detector_options for each device. The preview updates live." %}</p>
+  </div>
+  <div class="card-body py-4 space-y-4" id="device-options-form">
+  </div>
+</div>
+{% endif %}
+
 {# ── JSON preview ─────────────────────────────────────────────────────────── #}
 <div class="card">
   <div class="card-body py-4">
@@ -166,16 +204,24 @@
       <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">
         {% trans "station_config.json preview (first station)" %}
       </h3>
-      <button type="button"
-              id="copy-json-btn"
-              data-copy-target="script-json-block"
-              class="btn-ghost btn-xs flex items-center gap-1">
-        <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-          <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/>
-          <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/>
-        </svg>
-        <span id="copy-json-label">{% trans "Copy" %}</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <button type="button" id="download-json-btn"
+                class="btn-primary btn-xs flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z"/>
+            <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"/>
+          </svg>
+          {% trans "Download" %}
+        </button>
+        <button type="button" id="copy-json-btn"
+                class="btn-ghost btn-xs flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/>
+            <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/>
+          </svg>
+          <span id="copy-json-label">{% trans "Copy" %}</span>
+        </button>
+      </div>
     </div>
     <pre id="script-json-block"
          class="bg-slate-950 text-green-400 dark:bg-black rounded-lg p-4 text-xs leading-relaxed overflow-x-auto select-all font-mono whitespace-pre">{{ script_data_json }}</pre>
@@ -188,17 +234,188 @@
 <script>
 (function () {
   "use strict";
-  var btn = document.getElementById("copy-json-btn");
-  var label = document.getElementById("copy-json-label");
-  if (!btn || !navigator.clipboard) return;
-  btn.addEventListener("click", function () {
-    var targetId = btn.getAttribute("data-copy-target");
-    var text = document.getElementById(targetId).textContent;
-    navigator.clipboard.writeText(text).then(function () {
-      label.textContent = "{% trans 'Copied!' %}";
-      setTimeout(function () { label.textContent = "{% trans 'Copy' %}"; }, 2000);
+
+  var baseJson = JSON.parse(document.getElementById("base-script-data").textContent);
+  var metaEl = document.getElementById("devices-meta");
+  var stationsMeta = metaEl ? JSON.parse(metaEl.textContent) : { stations: [] };
+
+  var SCHEMAS = {
+    generic:    [ { key:"pattern",        type:"text",     label:"pattern",                     ph:"*",                                                                 dv:"*" },
+                  { key:"recursive",      type:"checkbox", label:"recursive",                    ph:"",                                                                  dv:true },
+                  { key:"file_type",      type:"text",     label:"file_type",                    ph:"(infer from ext)",                                                  dv:"" } ],
+    ufocapture: [ { key:"date_subfolders",type:"checkbox", label:"date_subfolders",              ph:"",                                                                  dv:false },
+                  { key:"extensions",     type:"text",     label:"extensions (comma-separated)", ph:".jpg,.png,.jpeg,.tiff,.webp,.bmp,.mp4,.avi,.mov,.wmv",               dv:".jpg,.png,.jpeg,.tiff,.webp,.bmp,.mp4,.avi,.mov,.wmv" } ],
+    rms:        [ { key:"station_code",   type:"text",     label:"station_code",                 ph:"e.g. HR0001",         dv:"" },
+                  { key:"subdir",         type:"text",     label:"subdir",                       ph:"ArchivedFiles",       dv:"ArchivedFiles" } ],
+    echoes:     [ { key:"csv_pattern",    type:"text",     label:"csv_pattern",                  ph:"echoes_*.csv",        dv:"echoes_*.csv" },
+                  { key:"spec_subdir",    type:"text",     label:"spec_subdir",                  ph:"(same dir)",          dv:"" },
+                  { key:"delimiter",      type:"text",     label:"delimiter",                    ph:",",                   dv:"," } ],
+    allskeye:   [ { key:"csv_pattern",    type:"text",     label:"csv_pattern",                  ph:"Events_*.csv",        dv:"Events_*.csv" },
+                  { key:"video_subdir",   type:"text",     label:"video_subdir",                 ph:"Videos",              dv:"Videos" },
+                  { key:"delimiter",      type:"text",     label:"delimiter",                    ph:",",                   dv:"," } ],
+    meteordl:   [ { key:"date_format",    type:"text",     label:"date_format",                  ph:"%Y%m%d_%H%M%S",       dv:"%Y%m%d_%H%M%S" } ],
+    metrec:     [ { key:"file_pattern",   type:"text",     label:"file_pattern",                 ph:"*.met",               dv:"*.met" } ]
+  };
+
+  // state[stHashId][devType][devHashId] = { watch_path:"", detector_options:{} }
+  var state = {};
+
+  function defaultOpts(detector) {
+    var opts={}; (SCHEMAS[detector]||[]).forEach(function(f){ opts[f.key]=f.dv; }); return opts;
+  }
+
+  function initState() {
+    stationsMeta.stations.forEach(function(st) {
+      state[st.hash_id] = { cameras:{}, radios:{} };
+      (st.cameras||[]).forEach(function(d){ state[st.hash_id].cameras[d.hash_id]={watch_path:"",detector_options:defaultOpts(d.detector||"generic"),detector:d.detector}; });
+      (st.radios||[]).forEach(function(d){  state[st.hash_id].radios[d.hash_id] ={watch_path:"",detector_options:defaultOpts(d.detector||"generic"),detector:d.detector}; });
+    });
+  }
+
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  function buildTextInput(label, ph, val, cb) {
+    var row=document.createElement("div"); row.className="flex items-center gap-3 min-w-0";
+    var lbl=document.createElement("span"); lbl.className="text-xs font-mono text-slate-500 w-48 flex-shrink-0"; lbl.textContent=label;
+    var inp=document.createElement("input"); inp.type="text"; inp.className="event-form-input text-xs py-1 flex-1 min-w-0";
+    inp.placeholder=ph; inp.value=(val!==null&&val!==undefined)?String(val):"";
+    inp.addEventListener("input",function(){ cb(inp.value); });
+    row.appendChild(lbl); row.appendChild(inp); return row;
+  }
+
+  function buildCheckInput(label, val, cb) {
+    var row=document.createElement("div"); row.className="flex items-center gap-3";
+    var lbl=document.createElement("label"); lbl.className="flex items-center gap-2 cursor-pointer text-xs font-mono text-slate-500";
+    var inp=document.createElement("input"); inp.type="checkbox"; inp.className="rounded"; inp.checked=Boolean(val);
+    inp.addEventListener("change",function(){ cb(inp.checked); });
+    lbl.appendChild(inp); lbl.appendChild(document.createTextNode(" "+label));
+    row.appendChild(lbl); return row;
+  }
+
+  function renderForm() {
+    var container=document.getElementById("device-options-form"); if(!container) return;
+    container.innerHTML="";
+    stationsMeta.stations.forEach(function(st) {
+      var devs=[];
+      (st.cameras||[]).forEach(function(d){ devs.push({type:"cameras",dev:d}); });
+      (st.radios||[]).forEach(function(d){  devs.push({type:"radios", dev:d}); });
+      if(!devs.length) return;
+      var stLbl=document.createElement("div");
+      stLbl.className="text-xs font-semibold text-slate-500 uppercase tracking-wide pb-1 border-b border-slate-200 dark:border-slate-700";
+      stLbl.textContent=st.name+" ("+st.code+")"; container.appendChild(stLbl);
+      devs.forEach(function(item) {
+        var dt=item.type, dev=item.dev;
+        var ds=state[st.hash_id][dt][dev.hash_id];
+        var detector=ds.detector||"generic";
+        var schema=SCHEMAS[detector]||[];
+        var isCamera=dt==="cameras";
+        var badge=isCamera
+          ? "bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300"
+          : "bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300";
+        var block=document.createElement("div");
+        block.className="rounded-lg border border-slate-200 dark:border-slate-700 p-4 space-y-3";
+        // Header
+        var hdr=document.createElement("div"); hdr.className="flex items-center gap-2 flex-wrap";
+        hdr.innerHTML='<span class="text-xs font-medium px-2 py-0.5 rounded '+badge+'">'+(isCamera?"Camera":"Radio")+'</span>'
+          +'<span class="font-medium text-sm text-slate-900 dark:text-slate-100">'+esc(dev.name)+'</span>'
+          +'<span class="text-slate-400 font-mono text-xs">'+esc(dev.code)+'</span>'
+          +'<span class="ml-auto text-xs font-mono text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">'+esc(detector)+'</span>';
+        block.appendChild(hdr);
+        // watch_path
+        block.appendChild(buildTextInput("watch_path","/path/to/watch",ds.watch_path,function(v){
+          state[st.hash_id][dt][dev.hash_id].watch_path=v; updatePreview();
+        }));
+        // detector_options
+        if(schema.length) {
+          var opLbl=document.createElement("p");
+          opLbl.className="text-xs font-semibold text-slate-400 pt-1"; opLbl.textContent="detector_options";
+          block.appendChild(opLbl);
+          schema.forEach(function(f) {
+            var cur=ds.detector_options.hasOwnProperty(f.key)?ds.detector_options[f.key]:f.dv;
+            var row;
+            if(f.type==="checkbox") {
+              row=buildCheckInput(f.label,cur,function(v){
+                state[st.hash_id][dt][dev.hash_id].detector_options[f.key]=v; updatePreview();
+              });
+            } else {
+              row=buildTextInput(f.label,f.ph,cur,function(v){
+                if(v===""||v===f.dv) delete state[st.hash_id][dt][dev.hash_id].detector_options[f.key];
+                else state[st.hash_id][dt][dev.hash_id].detector_options[f.key]=v;
+                updatePreview();
+              });
+            }
+            block.appendChild(row);
+          });
+        }
+        container.appendChild(block);
+      });
+    });
+  }
+
+  function buildOpts(detector, opts) {
+    var schema=SCHEMAS[detector]||[], result={};
+    schema.forEach(function(f){
+      if(!opts.hasOwnProperty(f.key)) return;
+      var v=opts[f.key];
+      if(f.key==="extensions"&&typeof v==="string") {
+        v=v.split(",").map(function(s){return s.trim();}).filter(Boolean);
+        if(v.length) result[f.key]=v; return;
+      }
+      if(f.type!=="checkbox"&&v==="") return;
+      result[f.key]=v;
+    });
+    return result;
+  }
+
+  function buildLiveJson() {
+    var out=JSON.parse(JSON.stringify(baseJson));
+    if(out.scheduler) {
+      var p=document.getElementById("sched-poll");      if(p) out.scheduler.poll_interval_seconds=parseInt(p.value,10)||10;
+      var m=document.getElementById("sched-max-files"); if(m) out.scheduler.max_files_per_cycle=parseInt(m.value,10)||50;
+      var r=document.getElementById("sched-req-poll"); if(r) out.scheduler.requirements_poll_interval_seconds=parseInt(r.value,10)||15;
+    }
+    var stHash=out.station&&out.station.hash_id;
+    if(!stHash||!state[stHash]) return out;
+    var ss=state[stHash];
+    (out.devices.cameras||[]).forEach(function(c){ var s=ss.cameras[c.hash_id]; if(!s) return; c.watch_path=s.watch_path; c.detector_options=buildOpts(c.detector,s.detector_options); });
+    (out.devices.radios||[]).forEach(function(r){  var s=ss.radios[r.hash_id];  if(!s) return; r.watch_path=s.watch_path; r.detector_options=buildOpts(r.detector,s.detector_options); });
+    return out;
+  }
+
+  function updatePreview() {
+    var pre=document.getElementById("script-json-block");
+    if(pre) pre.textContent=JSON.stringify(buildLiveJson(),null,2);
+  }
+
+  // Download
+  document.getElementById("download-json-btn")&&document.getElementById("download-json-btn").addEventListener("click",function(){
+    var data=buildLiveJson();
+    var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a"); a.href=url;
+    a.download="station_config_"+((data.station&&data.station.hash_id)||"station")+".json";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);a.remove();},1000);
+  });
+
+  // Copy
+  var cpBtn=document.getElementById("copy-json-btn");
+  var cpLbl=document.getElementById("copy-json-label");
+  if(cpBtn&&navigator.clipboard) cpBtn.addEventListener("click",function(){
+    navigator.clipboard.writeText(document.getElementById("script-json-block").textContent).then(function(){
+      if(cpLbl) cpLbl.textContent="{% trans 'Copied!' %}";
+      setTimeout(function(){if(cpLbl) cpLbl.textContent="{% trans 'Copy' %}";},2000);
     });
   });
+
+  // Scheduler inputs
+  ["sched-poll","sched-max-files","sched-req-poll"].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.addEventListener("input",function(){ updatePreview(); });
+  });
+
+  initState();
+  renderForm();
+  updatePreview();
 }());
 </script>
 {% endblock %}

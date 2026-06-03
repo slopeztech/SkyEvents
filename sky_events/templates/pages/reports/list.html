@@ -1,4 +1,4 @@
-{% extends "layouts/dashboard.html" %}
+﻿{% extends "layouts/dashboard.html" %}
 {% load i18n %}
 
 {% block title %}{% trans "Reports" %}{% endblock %}
@@ -6,10 +6,11 @@
 
 {% block content %}
 
+{# â”€â”€ Page header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
 <div class="page-header flex items-center justify-between">
   <div>
     <h2 class="page-title">{% trans "Reports" %}</h2>
-    <p class="page-subtitle">{{ paginator.count }} {% trans "total" %}</p>
+    <p class="page-subtitle">{{ total }} {% trans "records" %}</p>
   </div>
   {% if request.user.role == 'admin' %}
     <a href="{% url 'reports:create' %}" class="btn-primary btn-sm flex items-center gap-1.5">
@@ -21,126 +22,298 @@
   {% endif %}
 </div>
 
-<div class="card mb-4">
-  <div class="card-body py-5">
-    <form method="get" class="flex flex-wrap gap-3 items-center">
-      <input type="text" name="q" value="{{ q }}"
-             placeholder="{% trans "Search station…" %}"
-             class="filter-input w-56">
-      <select name="station" class="filter-select w-44">
-        <option value="">{% trans "All stations" %}</option>
-        {% for s in station_list %}
-          <option value="{{ s.pk }}"{% if station_filter == s.pk|stringformat:"s" %} selected{% endif %}>{{ s.name }}</option>
-        {% endfor %}
-      </select>
-      <select name="status" class="filter-select w-44">
-        <option value="">{% trans "All statuses" %}</option>
-        {% for val, label in status_choices %}
-          <option value="{{ val }}"{% if status_filter == val %} selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-      <button type="submit" class="btn-ghost btn-sm">{% trans "Filter" %}</button>
-      {% if q or status_filter or station_filter %}
-        <a href="{% url 'reports:list' %}" class="btn-ghost btn-sm text-slate-400">{% trans "Clear" %}</a>
-      {% endif %}
-    </form>
-  </div>
+{# â”€â”€ Tab navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
+<div class="flex gap-0 mb-6 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
+  {% for tab_key, tab_label in tabs %}
+    <a href="?tab={{ tab_key }}"
+       class="px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors
+              {% if active_tab == tab_key %}border-indigo-500 text-indigo-600 dark:text-indigo-400{% else %}border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500{% endif %}">
+      {{ tab_label }}
+    </a>
+  {% endfor %}
 </div>
 
-{% if reports %}
-  <div class="table-wrapper">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>{% trans "Station" %}</th>
-          <th>{% trans "Device" %}</th>
-          <th>{% trans "Recorded at (UTC)" %}</th>
-          <th>{% trans "Duration" %}</th>
-          <th>{% trans "Event" %}</th>
-          <th>{% trans "Status" %}</th>
-          <th>{% trans "Files" %}</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for report in reports %}
-          <tr>
-            <td class="font-medium text-slate-900 dark:text-slate-100">
-              <a href="{% url 'reports:detail' report.pk %}" class="hover:text-indigo-600 dark:hover:text-indigo-400">
-                {{ report.station.name }}
-              </a>
-            </td>
-            <td class="text-slate-500 text-sm">
-              {% if report.camera %}
-                {{ report.camera.name }}
-              {% elif report.radio_receiver %}
-                {{ report.radio_receiver.name }}
-              {% else %}
-                —
+{# â”€â”€ Floating selection bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
+{% if request.user.role == 'admin' %}
+<div id="selection-bar"
+     class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50
+            flex items-center gap-4 px-6 py-3
+            bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700
+            rounded-2xl shadow-2xl">
+  <span id="selection-count" class="text-sm font-medium text-slate-700 dark:text-slate-200"></span>
+  <a id="create-event-btn"
+     href="#"
+     data-base-url="{% url 'events:create' %}"
+     class="btn-primary btn-sm">
+    {% trans "Create event" %}
+  </a>
+  <button id="clear-selection" type="button" class="btn-ghost btn-xs text-slate-400">
+    {% trans "Clear" %}
+  </button>
+</div>
+{% endif %}
+
+{# â”€â”€ Report groups â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
+{% if groups %}
+  <div class="space-y-2" id="groups-container">
+    {% for grp in groups %}
+
+      {% if grp.count == 1 %}
+        {# â”€â”€ Single report (flat row) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
+        {% with r=grp.reports.0 %}
+        <div class="card">
+          <div class="flex items-center gap-3 px-4 py-3">
+
+            {# Checkbox â€” only for unlinked reports and admin users #}
+            <div class="w-5 flex-shrink-0 flex items-center justify-center">
+              {% if not r.event and request.user.role == 'admin' %}
+                <input type="checkbox"
+                       class="report-check w-4 h-4 rounded text-indigo-600 border-slate-300 cursor-pointer"
+                       data-pk="{{ r.pk }}">
               {% endif %}
-            </td>
-            <td class="tabular-nums text-sm text-slate-600 dark:text-slate-400">
-              {{ report.recorded_at|date:"Y-m-d H:i" }}
-            </td>
-            <td class="tabular-nums text-sm text-slate-500">
-              {{ report.duration_ms|default:"—" }}{% if report.duration_ms %} ms{% endif %}
-            </td>
-            <td class="text-sm">
-              {% if report.event %}
-                <a href="{% url 'events:detail' report.event.code %}" class="text-indigo-600 dark:text-indigo-400 hover:underline font-mono text-xs">
-                  {{ report.event.code }}
+            </div>
+
+            {# Station #}
+            <div class="w-40 flex-shrink-0 min-w-0">
+              <a href="{% url 'reports:detail' r.pk %}"
+                 class="text-sm font-medium text-slate-800 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 truncate block">
+                {{ r.station.name }}
+              </a>
+            </div>
+
+            {# Device #}
+            <div class="flex-1 min-w-0">
+              <span class="text-xs text-slate-500 truncate block">
+                {% if r.camera %}{{ r.camera.name }}{% elif r.radio_receiver %}{{ r.radio_receiver.name }}{% else %}â€”{% endif %}
+              </span>
+            </div>
+
+            {# Recorded at #}
+            <div class="w-36 flex-shrink-0 tabular-nums text-xs text-slate-500 dark:text-slate-400">
+              {{ r.recorded_at|date:"Y-m-d H:i:s" }}
+            </div>
+
+            {# Event link #}
+            <div class="w-28 flex-shrink-0">
+              {% if r.event %}
+                <a href="{% url 'events:detail' r.event.code %}"
+                   class="font-mono text-xs text-indigo-500 dark:text-indigo-400 hover:underline">
+                  {{ r.event.code }}
                 </a>
               {% else %}
-                <span class="text-slate-400">—</span>
+                <span class="text-slate-300 dark:text-slate-600 text-xs">â€”</span>
               {% endif %}
-            </td>
-            <td>
-              {% if report.status == 'linked' %}
-                <span class="badge badge-green"><span class="dot-green"></span>{{ report.get_status_display }}</span>
-              {% elif report.status == 'archived' %}
-                <span class="badge"><span class="dot"></span>{{ report.get_status_display }}</span>
-              {% else %}
-                <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ report.get_status_display }}</span>
-              {% endif %}
-            </td>
-            <td class="tabular-nums text-sm text-slate-500">{{ report.files.count }}</td>
-            <td>
-              {% if request.user.role == 'admin' %}
-                <div class="flex items-center gap-2 justify-end">
-                  <a href="{% url 'reports:edit' report.pk %}" class="btn-ghost btn-xs">{% trans "Edit" %}</a>
-                  <a href="{% url 'reports:delete' report.pk %}" class="btn-ghost btn-xs text-red-500 hover:text-red-700">{% trans "Delete" %}</a>
-                </div>
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+            </div>
 
-  {% if is_paginated %}
-    <div class="flex items-center justify-between mt-4 text-sm text-slate-500">
-      <span>{% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ paginator.num_pages }}</span>
-      <div class="flex gap-2">
-        {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if station_filter %}&station={{ station_filter }}{% endif %}" class="btn-ghost btn-xs">{% trans "Previous" %}</a>
-        {% endif %}
-        {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if station_filter %}&station={{ station_filter }}{% endif %}" class="btn-ghost btn-xs">{% trans "Next" %}</a>
-        {% endif %}
-      </div>
-    </div>
-  {% endif %}
+            {# Status #}
+            <div class="w-24 flex-shrink-0">
+              {% if r.status == 'linked' %}
+                <span class="badge badge-green"><span class="dot-green"></span>{{ r.get_status_display }}</span>
+              {% elif r.status == 'archived' %}
+                <span class="badge"><span class="dot"></span>{{ r.get_status_display }}</span>
+              {% else %}
+                <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ r.get_status_display }}</span>
+              {% endif %}
+            </div>
+
+            {# Files count #}
+            <div class="w-8 flex-shrink-0 tabular-nums text-xs text-slate-400 text-center">
+              {{ r.files_count }}
+            </div>
+
+            {# Ver link #}
+            <div class="flex-shrink-0">
+              <a href="{% url 'reports:detail' r.pk %}" class="btn-ghost btn-xs">{% trans "Ver" %}</a>
+            </div>
+
+          </div>
+        </div>
+        {% endwith %}
+
+      {% else %}
+        {# â”€â”€ Multi-report group (collapsible card) â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
+        <div class="card border-l-4 border-indigo-300 dark:border-indigo-600 report-group-card">
+
+          {# Group header (click to collapse) #}
+          <div class="group-header flex items-center gap-3 px-4 py-3 cursor-pointer select-none">
+
+            <div class="w-5 flex-shrink-0 flex items-center justify-center">
+              {% if grp.has_unlinked and request.user.role == 'admin' %}
+                <input type="checkbox"
+                       class="group-master-check w-4 h-4 rounded text-indigo-600 border-slate-300 cursor-pointer"
+                       onclick="event.stopPropagation()">
+              {% endif %}
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <span class="font-semibold text-sm text-slate-800 dark:text-slate-100">
+                {% if grp.time_start != grp.time_end %}
+                  {{ grp.time_start|date:"H:i:s" }} &ndash; {{ grp.time_end|date:"H:i:s" }} UTC
+                {% else %}
+                  {{ grp.time_start|date:"H:i:s" }} UTC
+                {% endif %}
+              </span>
+              <span class="text-xs text-slate-400 dark:text-slate-500 ml-2">
+                {{ grp.count }} {% trans "reports" %}{% if grp.stations %} &middot; {{ grp.stations|join:", " }}{% endif %}
+              </span>
+            </div>
+
+            <button class="group-toggle btn-ghost btn-xs flex-shrink-0" type="button" aria-expanded="true">
+              <svg class="w-4 h-4 transition-transform duration-150" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+              </svg>
+            </button>
+          </div>
+
+          {# Group body #}
+          <div class="group-body divide-y divide-slate-100 dark:divide-slate-700 border-t border-slate-100 dark:border-slate-700">
+            {% for r in grp.reports %}
+              <div class="flex items-center gap-3 px-4 py-2.5">
+
+                <div class="w-5 flex-shrink-0 flex items-center justify-center">
+                  {% if not r.event and request.user.role == 'admin' %}
+                    <input type="checkbox"
+                           class="report-check group-check-item w-4 h-4 rounded text-indigo-600 border-slate-300 cursor-pointer"
+                           data-pk="{{ r.pk }}">
+                  {% endif %}
+                </div>
+
+                <div class="w-40 flex-shrink-0 min-w-0">
+                  <a href="{% url 'reports:detail' r.pk %}"
+                     class="text-sm font-medium text-slate-800 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 truncate block">
+                    {{ r.station.name }}
+                  </a>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <span class="text-xs text-slate-500 truncate block">
+                    {% if r.camera %}{{ r.camera.name }}{% elif r.radio_receiver %}{{ r.radio_receiver.name }}{% else %}â€”{% endif %}
+                  </span>
+                </div>
+
+                <div class="w-36 flex-shrink-0 tabular-nums text-xs text-slate-500 dark:text-slate-400">
+                  {{ r.recorded_at|date:"H:i:s" }}
+                </div>
+
+                <div class="w-28 flex-shrink-0">
+                  {% if r.event %}
+                    <a href="{% url 'events:detail' r.event.code %}"
+                       class="font-mono text-xs text-indigo-500 dark:text-indigo-400 hover:underline">
+                      {{ r.event.code }}
+                    </a>
+                  {% else %}
+                    <span class="text-slate-300 dark:text-slate-600 text-xs">â€”</span>
+                  {% endif %}
+                </div>
+
+                <div class="w-24 flex-shrink-0">
+                  {% if r.status == 'linked' %}
+                    <span class="badge badge-green"><span class="dot-green"></span>{{ r.get_status_display }}</span>
+                  {% elif r.status == 'archived' %}
+                    <span class="badge"><span class="dot"></span>{{ r.get_status_display }}</span>
+                  {% else %}
+                    <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ r.get_status_display }}</span>
+                  {% endif %}
+                </div>
+
+                <div class="w-8 flex-shrink-0 tabular-nums text-xs text-slate-400 text-center">
+                  {{ r.files_count }}
+                </div>
+
+                <div class="flex-shrink-0">
+                  <a href="{% url 'reports:detail' r.pk %}" class="btn-ghost btn-xs">{% trans "Ver" %}</a>
+                </div>
+
+              </div>
+            {% endfor %}
+          </div>
+
+        </div>
+      {% endif %}
+
+    {% endfor %}
+  </div>
 
 {% else %}
   <div class="card">
     <div class="card-body text-center py-16 space-y-3">
       <p class="text-slate-400 text-sm">{% trans "No reports found." %}</p>
       {% if request.user.role == 'admin' %}
-        <a href="{% url 'reports:create' %}" class="btn-primary btn-sm inline-flex items-center gap-1.5">{% trans "Create first report" %}</a>
+        <a href="{% url 'reports:create' %}" class="btn-primary btn-sm inline-flex items-center gap-1.5">
+          {% trans "Create first report" %}
+        </a>
       {% endif %}
     </div>
   </div>
 {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  const bar = document.getElementById('selection-bar');
+  if (!bar) return;  // non-admin: no checkboxes, nothing to do
+
+  const countEl  = document.getElementById('selection-count');
+  const createBtn = document.getElementById('create-event-btn');
+  const clearBtn  = document.getElementById('clear-selection');
+  const baseUrl   = createBtn.dataset.baseUrl;
+
+  function getCheckedPks() {
+    return [...document.querySelectorAll('.report-check:checked')].map(c => c.dataset.pk);
+  }
+
+  function updateBar() {
+    const pks = getCheckedPks();
+    if (pks.length > 0) {
+      countEl.textContent = pks.length + ' {% trans "selected" %}';
+      createBtn.href = baseUrl + '?reports=' + pks.join(',');
+      bar.classList.remove('hidden');
+    } else {
+      bar.classList.add('hidden');
+    }
+  }
+
+  // Individual checkboxes
+  document.querySelectorAll('.report-check').forEach(function (c) {
+    c.addEventListener('change', updateBar);
+  });
+
+  // Group master checkbox â€” toggles all unlinked reports in that group
+  document.querySelectorAll('.group-master-check').forEach(function (master) {
+    master.addEventListener('change', function () {
+      var card = this.closest('.report-group-card');
+      card.querySelectorAll('.report-check').forEach(function (c) {
+        c.checked = master.checked;
+      });
+      updateBar();
+    });
+  });
+
+  // Clear all selections
+  clearBtn.addEventListener('click', function () {
+    document.querySelectorAll('.report-check').forEach(function (c) { c.checked = false; });
+    document.querySelectorAll('.group-master-check').forEach(function (c) { c.checked = false; });
+    bar.classList.add('hidden');
+  });
+
+  // Collapsible groups â€” click header to toggle body
+  document.querySelectorAll('.group-header').forEach(function (header) {
+    header.addEventListener('click', function (e) {
+      if (e.target.closest('input')) return; // don't collapse when clicking checkbox
+      var card = this.closest('.report-group-card');
+      var body = card.querySelector('.group-body');
+      var btn  = card.querySelector('.group-toggle');
+      var svg  = btn.querySelector('svg');
+      var collapsed = body.classList.toggle('hidden');
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      svg.style.transform = collapsed ? 'rotate(-90deg)' : '';
+    });
+  });
+
+}());
+</script>
 {% endblock %}

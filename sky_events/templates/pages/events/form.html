@@ -27,6 +27,22 @@
     </div>
   {% endif %}
 
+  {% if prefill_reports %}
+  <input type="hidden" name="prefill_report_pks" value="{{ prefill_report_pks }}">
+  <div class="mb-6 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800">
+    <p class="text-sm font-semibold text-indigo-800 dark:text-indigo-300 mb-2">{% trans "Reports to link" %} ({{ prefill_reports|length }})</p>
+    <ul class="space-y-1">
+      {% for r in prefill_reports %}
+        <li class="text-xs text-indigo-700 dark:text-indigo-400">
+          {{ r.recorded_at|date:"Y-m-d H:i:s" }} UTC &mdash;
+          <span class="font-medium">{{ r.station.name }}</span>
+          {% if r.camera %}&middot; {{ r.camera.name }}{% elif r.radio_receiver %}&middot; {{ r.radio_receiver.name }}{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     <div class="lg:col-span-2 space-y-6">
@@ -98,7 +114,7 @@
               <span class="text-red-500 ml-0.5" aria-hidden="true">*</span>
             </label>
             <input type="datetime-local" name="detected_at" id="{{ form.detected_at.id_for_label }}"
-                   value="{{ form.detected_at.value|default:'' }}"
+                   value="{% if form.detected_at.value %}{{ form.detected_at.value|date:"Y-m-d\TH:i" }}{% endif %}"
                    class="event-form-input{% if form.detected_at.errors %} event-form-input-error{% endif %}"
                    required>
             {% for err in form.detected_at.errors %}<p class="event-form-error">{{ err }}</p>{% endfor %}

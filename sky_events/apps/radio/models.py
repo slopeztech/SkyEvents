@@ -31,6 +31,13 @@ def _generate_hash_id() -> str:
     return secrets.token_hex(12)  # 24-char hex string
 
 
+class RadioDetector(models.TextChoices):
+    """Reporter detector software for this radio receiver."""
+
+    GENERIC = "generic", _("Generic")
+    ECHOES = "echoes", _("Echoes")
+
+
 class RadioReceiver(TimeStampedModel):
     """
     A radio receiver installed at a station for meteor radio detection.
@@ -67,6 +74,13 @@ class RadioReceiver(TimeStampedModel):
         editable=False,
         verbose_name=_("Hash ID"),
         help_text=_("Short unique identifier used in script configuration files."),
+    )
+    detector: models.CharField = models.CharField(
+        max_length=32,
+        choices=RadioDetector.choices,
+        default=RadioDetector.GENERIC,
+        verbose_name=_("Detector"),
+        help_text=_("Reporter capture software used by this radio receiver."),
     )
 
     # --- Hardware specs ---
