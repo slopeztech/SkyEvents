@@ -138,6 +138,15 @@ class Station(TimeStampedModel):
         help_text=_("Arbitrary key-value pairs for station-specific configuration."),
     )
 
+    # --- Heartbeat ---
+    last_ping_at: models.DateTimeField = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name=_("Last ping (UTC)"),
+        help_text=_("UTC timestamp of the most recent heartbeat received from the station."),
+    )
+
     class Meta:
         verbose_name = _("Station")
         verbose_name_plural = _("Stations")

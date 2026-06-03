@@ -322,6 +322,7 @@ REST_FRAMEWORK: dict = {
         "anon": "60/hour",
         "user": "1000/hour",
         "station": "10000/hour",  # higher limit for station API key auth
+        "ping": "12/minute",  # max 1 per 5 s per station; 12/min is the DRF-safe ceiling
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "sky_events.apps.core.exceptions.custom_exception_handler",

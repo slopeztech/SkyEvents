@@ -10,6 +10,9 @@ from sky_events.apps.users.models import User, UserRole
 
 from .forms import LoginForm
 
+import json
+import shutil
+
 
 class IndexView(TemplateView):
     template_name = "pages/index.html"
@@ -85,6 +88,70 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 )
                 .order_by("-created_at")[:8]
             )
+
+            # --- Stations map (with ping status) ---
+            from django.conf import settings as django_settings
+            from django.urls import reverse
+            ping_threshold = timezone.now() - timezone.timedelta(seconds=60)
+            all_stations = Station.objects.filter(
+                latitude__isnull=False, longitude__isnull=False
+            ).only("id", "name", "code", "latitude", "longitude", "last_ping_at", "status")
+            map_stations = []
+            for st in all_stations:
+                is_online = (
+                    st.last_ping_at is not None and st.last_ping_at >= ping_threshold
+                )
+                map_stations.append({
+                    "name": st.name,
+                    "code": st.code,
+                    "lat": float(st.latitude),
+                    "lng": float(st.longitude),
+                    "online": is_online,
+                    "last_ping": st.last_ping_at.isoformat() if st.last_ping_at else None,
+                    "url": reverse("station:detail", kwargs={"code": st.code}),
+                })
+            ctx["map_stations_json"] = json.dumps(map_stations)
+            ctx["map_center_lat"] = getattr(django_settings, "MAP_DEFAULT_LAT", 40.4)
+            ctx["map_center_lng"] = getattr(django_settings, "MAP_DEFAULT_LNG", -3.7)
+            ctx["map_center_zoom"] = getattr(django_settings, "MAP_DEFAULT_ZOOM", 6)
+
+            # --- Recent reports ---
+            from sky_events.apps.reports.models import StationReport
+            ctx["recent_reports"] = (
+                StationReport.objects.select_related("station", "camera", "radio_receiver")
+                .order_by("-created_at")[:10]
+            )
+
+            # --- Recent events ---
+            from sky_events.apps.events.models import AstronomicalEvent
+            ctx["recent_events"] = (
+                AstronomicalEvent.objects.order_by("-detected_at")[:10]
+            )
+
+            # --- System stats ---
+            try:
+                import psutil
+                cpu_pct = psutil.cpu_percent(interval=0.1)
+                mem = psutil.virtual_memory()
+                ctx["sys_cpu_pct"] = round(cpu_pct, 1)
+                ctx["sys_mem_total_gb"] = round(mem.total / 1024**3, 1)
+                ctx["sys_mem_used_gb"] = round(mem.used / 1024**3, 1)
+                ctx["sys_mem_pct"] = mem.percent
+            except ImportError:
+                ctx["sys_cpu_pct"] = None
+                ctx["sys_mem_pct"] = None
+
+            try:
+                import django
+                from pathlib import Path
+                base_dir = Path(django_settings.BASE_DIR)
+                disk = shutil.disk_usage(str(base_dir))
+                ctx["sys_disk_total_gb"] = round(disk.total / 1024**3, 1)
+                ctx["sys_disk_used_gb"] = round(disk.used / 1024**3, 1)
+                ctx["sys_disk_free_gb"] = round(disk.free / 1024**3, 1)
+                ctx["sys_disk_pct"] = round(disk.used / disk.total * 100, 1)
+            except Exception:
+                ctx["sys_disk_pct"] = None
 
             week_ago = timezone.now() - timezone.timedelta(days=7)
             recent_users = User.objects.filter(created_at__gte=week_ago).count()

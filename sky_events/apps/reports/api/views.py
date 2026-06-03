@@ -27,14 +27,15 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, Throttled
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from sky_events.apps.camera.models import Camera
 from sky_events.apps.core.api.permissions import ScriptTokenPermission
-from sky_events.apps.core.api.throttles import StationThrottle
+from sky_events.apps.core.api.throttles import PingThrottle, StationThrottle
 from sky_events.apps.radio.models import RadioReceiver
 from sky_events.apps.reports.models import (
     MediaRequirement,
@@ -211,3 +212,46 @@ class ReportAttachmentUploadAPIView(CreateAPIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class StationPingAPIView(APIView):
+    """
+    POST /api/v1/station/ping/
+
+    Heartbeat endpoint.  The station reporter calls this periodically so the
+    dashboard can display each station's online/offline status.
+
+    The request body must include ``station_hash_id``.  The view records
+    ``Station.last_ping_at = now()`` and returns ``{"status": "ok"}``.
+
+    Rate limiting
+    -------------
+    DRF's ``PingThrottle`` (scope ``ping``) caps requests at 12/minute
+    (~1 per 5 s) per authenticated user.  Requests arriving faster than
+    that receive HTTP 429.
+    """
+
+    permission_classes = [ScriptTokenPermission]
+    throttle_classes = [PingThrottle]
+
+    def post(self, request, *args, **kwargs):
+        station_hash_id = request.data.get("station_hash_id", "")
+        if not station_hash_id:
+            return Response(
+                {"detail": _("station_hash_id is required.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        station = Station.objects.filter(
+            hash_id=station_hash_id,
+            owner=request.user,
+        ).first()
+        if station is None:
+            raise PermissionDenied(
+                _("Station not found or not owned by the authenticated user.")
+            )
+
+        station.last_ping_at = timezone.now()
+        station.save(update_fields=["last_ping_at"])
+
+        return Response({"status": "ok"}, status=status.HTTP_200_OK)

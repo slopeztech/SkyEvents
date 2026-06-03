@@ -20,6 +20,11 @@ urlpatterns = [
         name="station-report-create",
     ),
     path(
+        "ping/",
+        views.StationPingAPIView.as_view(),
+        name="station-ping",
+    ),
+    path(
         "requirements/",
         views.MediaRequirementListAPIView.as_view(),
         name="station-requirement-list",
