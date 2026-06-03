@@ -98,3 +98,4 @@ Reporter/*.pyc
 *.bak
 *.tmp
 *.orig
+.aider*
