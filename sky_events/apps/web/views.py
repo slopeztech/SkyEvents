@@ -12,6 +12,7 @@ from .forms import LoginForm
 
 import json
 import shutil
+from decimal import Decimal
 
 
 class IndexView(TemplateView):
@@ -98,22 +99,40 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             ).only("id", "name", "code", "latitude", "longitude", "last_ping_at", "status")
             map_stations = []
             for st in all_stations:
-                is_online = (
-                    st.last_ping_at is not None and st.last_ping_at >= ping_threshold
-                )
-                map_stations.append({
-                    "name": st.name,
-                    "code": st.code,
-                    "lat": float(st.latitude),
-                    "lng": float(st.longitude),
-                    "online": is_online,
-                    "last_ping": st.last_ping_at.isoformat() if st.last_ping_at else None,
-                    "url": reverse("station:detail", kwargs={"code": st.code}),
-                })
-            ctx["map_stations_json"] = json.dumps(map_stations)
-            ctx["map_center_lat"] = getattr(django_settings, "MAP_DEFAULT_LAT", 40.4)
-            ctx["map_center_lng"] = getattr(django_settings, "MAP_DEFAULT_LNG", -3.7)
-            ctx["map_center_zoom"] = getattr(django_settings, "MAP_DEFAULT_ZOOM", 6)
+                try:
+                    is_online = (
+                        st.last_ping_at is not None and st.last_ping_at >= ping_threshold
+                    )
+                    # Ensure lat/lng are valid floats (not Decimal or None)
+                    lat = float(st.latitude)
+                    lng = float(st.longitude)
+                    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+                        continue  # skip invalid coordinates
+                    
+                    map_stations.append({
+                        "name": st.name,
+                        "code": st.code,
+                        "lat": lat,
+                        "lng": lng,
+                        "online": is_online,
+                        "last_ping": st.last_ping_at.isoformat() if st.last_ping_at else None,
+                        "url": reverse("station:detail", kwargs={"code": st.code}),
+                    })
+                except (ValueError, TypeError):
+                    # skip this station if coordinates are invalid
+                    continue
+            
+            # Use a custom JSON encoder to handle any edge cases
+            class SafeJSONEncoder(json.JSONEncoder):
+                def default(self, obj):
+                    if isinstance(obj, Decimal):
+                        return float(obj)
+                    return super().default(obj)
+            
+            ctx["map_stations_json"] = json.dumps(map_stations, cls=SafeJSONEncoder)
+            ctx["map_center_lat"] = float(getattr(django_settings, "MAP_DEFAULT_LAT", 40.4))
+            ctx["map_center_lng"] = float(getattr(django_settings, "MAP_DEFAULT_LNG", -3.7))
+            ctx["map_center_zoom"] = int(getattr(django_settings, "MAP_DEFAULT_ZOOM", 6))
 
             # --- Recent reports ---
             from sky_events.apps.reports.models import StationReport

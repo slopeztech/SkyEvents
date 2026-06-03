@@ -235,9 +235,9 @@
 <script>
 (function () {
   var stations = {{ map_stations_json|safe }};
-  var lat = {{ map_center_lat|default:"40.4" }};
-  var lng = {{ map_center_lng|default:"-3.7" }};
-  var zoom = {{ map_center_zoom|default:"6" }};
+  var lat = parseFloat('{{ map_center_lat|default:"40.4" }}');
+  var lng = parseFloat('{{ map_center_lng|default:"-3.7" }}');
+  var zoom = parseInt('{{ map_center_zoom|default:"6" }}', 10);
 
   var map = L.map('admin-station-map').setView([lat, lng], zoom);
 
