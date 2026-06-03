@@ -1,0 +1,112 @@
+{
+  "_comment": "SkyEvents Reporter — Example station configuration",
+  "_comment_2": "Copy this file to 'station_config.json' and fill in your values.",
+  "_comment_3": "Remove all '_comment*' fields before use (JSON does not support comments).",
+
+  "api": {
+    "base_url": "https://skyevents.example.com/api/v1",
+    "email": "my_station_user@example.com",
+    "password": "my_secure_password",
+    "script_token": "",
+    "_comment": "Leave script_token empty — it will be fetched automatically from /auth/me/ on first login.",
+    "token_refresh_margin_seconds": 300,
+    "timeout_seconds": 60
+  },
+
+  "station": {
+    "hash_id": "ABCDE12345"
+  },
+
+  "devices": {
+    "cameras": [
+      {
+        "hash_id": "CAM001",
+        "name": "Main Allsky Camera (UFOCapture)",
+        "detector": "ufocapture",
+        "watch_path": "C:\\UFOCapture\\captures",
+        "detector_options": {
+          "date_subfolders": false,
+          "extensions": [".avi", ".jpg", ".xml"]
+        }
+      },
+      {
+        "hash_id": "CAM002",
+        "name": "Garden Camera (RMS)",
+        "detector": "rms",
+        "watch_path": "/home/pi/RMS_data",
+        "detector_options": {
+          "station_code": "HR0001",
+          "subdir": "ArchivedFiles"
+        }
+      },
+      {
+        "hash_id": "CAM003",
+        "name": "Wide-angle Camera (Generic MP4)",
+        "detector": "generic",
+        "watch_path": "/data/captures/wide",
+        "detector_options": {
+          "pattern": "*.mp4",
+          "recursive": false,
+          "file_type": ""
+        }
+      },
+      {
+        "hash_id": "CAM004",
+        "name": "AllSkyEye Camera",
+        "detector": "allskeye",
+        "watch_path": "/data/allskeye",
+        "detector_options": {
+          "csv_pattern": "Events_*.csv",
+          "video_subdir": "Videos",
+          "delimiter": ","
+        }
+      },
+      {
+        "hash_id": "CAM005",
+        "name": "MeteorDL Camera",
+        "detector": "meteordl",
+        "watch_path": "/data/meteordl/events",
+        "detector_options": {}
+      },
+      {
+        "hash_id": "CAM006",
+        "name": "MetRec Camera",
+        "detector": "metrec",
+        "watch_path": "/data/metrec",
+        "detector_options": {
+          "file_pattern": "*.met"
+        }
+      }
+    ],
+    "radios": [
+      {
+        "hash_id": "RAD001",
+        "name": "Forward-scatter Radio (Echoes)",
+        "detector": "echoes",
+        "watch_path": "C:\\Echoes\\data",
+        "detector_options": {
+          "csv_pattern": "echoes_*.csv",
+          "spec_subdir": "spectrograms",
+          "delimiter": ","
+        }
+      }
+    ]
+  },
+
+  "scheduler": {
+    "poll_interval_seconds": 300,
+    "max_files_per_cycle": 50,
+    "requirements_poll_interval_seconds": 600
+  },
+
+  "state": {
+    "db_path": "./reporter_state.db"
+  },
+
+  "logging": {
+    "level": "INFO",
+    "file": "./reporter.log",
+    "max_bytes": 10485760,
+    "backup_count": 5
+  }
+}
