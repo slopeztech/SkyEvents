@@ -74,6 +74,7 @@ Pillow==11.1.0                  # Image processing
 django-model-utils==5.0.0       # TimeStampedModel, StatusField, etc.
 django-filter==24.3             # Queryset filtering
 whitenoise==6.9.0               # Static file serving
+psutil==7.2.2
 
 # ============================================================================
 # Development & Testing (install with: pip install -r requirements/dev.txt)
