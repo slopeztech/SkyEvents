@@ -42,6 +42,7 @@ Production deployment on Ubuntu 24.04 LTS with Nginx, Gunicorn, Celery, PostgreS
     - [403 Forbidden on static and media files](#403-forbidden-on-static-and-media-files)
     - [500 Internal Server Error on login — `ValueError: Port could not be cast to integer value`](#500-internal-server-error-on-login--valueerror-port-could-not-be-cast-to-integer-value)
     - [`TypeError: 'str' object is not callable` in structlog — logging errors fill the journal](#typeerror-str-object-is-not-callable-in-structlog--logging-errors-fill-the-journal)
+    - [404 on uploaded media files — `open() "/srv/skyevents/app/media/..." failed (2: No such file or directory)`](#404-on-uploaded-media-files--open-srvskyeventsappmedia-failed-2-no-such-file-or-directory)
 
 ---
 
@@ -72,6 +73,11 @@ sudo useradd --system --shell /bin/bash --home /srv/skyevents --create-home skye
 # Allow Nginx (www-data) to read static/media files
 # useradd creates the home directory with 700 by default, which blocks Nginx
 sudo chmod 755 /srv/skyevents
+
+# Create media directory for uploads (outside the app tree so it survives git pulls)
+sudo mkdir -p /srv/skyevents/media
+sudo chown skyevents:skyevents /srv/skyevents/media
+sudo chmod 755 /srv/skyevents/media
 ```
 
 ---
@@ -203,6 +209,14 @@ python manage.py migrate --settings=config.settings.production
 python manage.py collectstatic --noinput --settings=config.settings.production
 python manage.py compilemessages --settings=config.settings.production
 EOF
+
+# Ensure media directory exists with correct permissions (for uploaded files)
+sudo mkdir -p /srv/skyevents/media
+sudo chown skyevents:skyevents /srv/skyevents/media
+sudo chmod 755 /srv/skyevents/media
+
+# Allow Nginx to traverse into the media directory
+sudo chmod 755 /srv/skyevents
 
 # Create a superuser interactively (first deploy only)
 sudo -u skyevents bash -c "
@@ -372,7 +386,7 @@ server {
 
     # --- Media files ---
     location /media/ {
-        alias /srv/skyevents/app/media/;
+        alias /srv/skyevents/media/;
         expires 7d;
         access_log off;
     }
@@ -383,7 +397,6 @@ server {
         proxy_set_header   Host              $http_host;
         proxy_set_header   X-Real-IP         $remote_addr;
         proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
         proxy_redirect     off;
         proxy_read_timeout 90;
     }
@@ -456,7 +469,7 @@ server {
 
     # --- Media files ---
     location /media/ {
-        alias /srv/skyevents/app/media/;
+        alias /srv/skyevents/media/;
         expires 7d;
         access_log off;
     }
@@ -806,6 +819,7 @@ sudo chmod 440 /etc/sudoers.d/skyevents-services
 - [ ] API root accessible at `https://skyevents.example.com/api/v1/`
 - [ ] `python manage.py check --deploy --settings=config.settings.production` — no issues
 - [ ] Log files being written to `/var/log/skyevents/`
+- [ ] Media directory writable and accessible: `ls -ld /srv/skyevents/media` shows `755 skyevents:skyevents`
 - [ ] Certbot auto-renewal timer active: `sudo systemctl status certbot.timer`
 
 ---
@@ -976,3 +990,39 @@ After fixing, reload Gunicorn:
 ```bash
 sudo systemctl reload skyevents-gunicorn
 ```
+
+---
+
+### 404 on uploaded media files — `open() "/srv/skyevents/app/media/..." failed (2: No such file or directory)`
+
+**Symptom:** Files uploaded by the Reporter appear to be accepted (Reporter logs show `Uploaded … for requirement …`) but the browser receives 404. The Nginx error log shows:
+
+```
+open() "/srv/skyevents/app/media/..." failed (2: No such file or directory)
+```
+
+The actual media directory is empty (`/srv/skyevents/app/media/` has no files).
+
+**Cause:** Django's `MEDIA_ROOT` defaults to `/srv/skyevents/media/` (one level above the app tree), but the Nginx `location /media/` alias was pointing to `/srv/skyevents/app/media/`. Files are written to the correct path by Django/Gunicorn, but Nginx looks in the wrong place.
+
+**Fix:** Update the Nginx alias to match Django's `MEDIA_ROOT`, then create the directory if it doesn't exist yet:
+
+```bash
+# Create the media directory with the correct owner
+sudo mkdir -p /srv/skyevents/media
+sudo chown skyevents:skyevents /srv/skyevents/media
+sudo chmod 755 /srv/skyevents/media
+
+# Update the Nginx vhost — change the media alias to the correct path
+sudo sed -i 's|alias /srv/skyevents/app/media/;|alias /srv/skyevents/media/;|g' \
+    /etc/nginx/sites-available/skyevents
+
+# Verify the change looks correct
+grep -n "media" /etc/nginx/sites-available/skyevents
+
+# Test and reload
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+> **Why outside the app tree?** Keeping `MEDIA_ROOT` at `/srv/skyevents/media/` (not inside `app/`) means uploaded files survive `git reset --hard` and re-deploys, which wipe the working tree.
