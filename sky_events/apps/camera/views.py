@@ -23,15 +23,17 @@ from .forms import CameraForm
 from .models import Camera
 
 
-class AdminRequiredMixin(LoginRequiredMixin):
+class CameraRequiredMixin(LoginRequiredMixin):
+    """Allow admins and station owners to manage their own cameras."""
+
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated or request.user.role != UserRole.ADMIN:
+        if not request.user.is_authenticated:
             messages.error(request, _("You do not have permission to access this page."))
             return redirect("web:dashboard")
         return super().dispatch(request, *args, **kwargs)
 
 
-class CameraListView(AdminRequiredMixin, ListView):
+class CameraListView(CameraRequiredMixin, ListView):
     model = Camera
     template_name = "pages/cameras/list.html"
     context_object_name = "cameras"
@@ -39,6 +41,8 @@ class CameraListView(AdminRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = Camera.objects.select_related("station").order_by("station__name", "name")
+        if self.request.user.role != UserRole.ADMIN:
+            qs = qs.filter(station__owner=self.request.user)
         if status := self.request.GET.get("status", ""):
             qs = qs.filter(status=status)
         if station_code := self.request.GET.get("station", ""):
@@ -57,7 +61,7 @@ class CameraListView(AdminRequiredMixin, ListView):
         return ctx
 
 
-class CameraDetailView(AdminRequiredMixin, DetailView):
+class CameraDetailView(CameraRequiredMixin, DetailView):
     model = Camera
     template_name = "pages/cameras/detail.html"
     context_object_name = "camera"
@@ -65,14 +69,22 @@ class CameraDetailView(AdminRequiredMixin, DetailView):
     slug_url_kwarg = "code"
 
     def get_queryset(self):
-        return Camera.objects.select_related("station")
+        qs = Camera.objects.select_related("station")
+        if self.request.user.role != UserRole.ADMIN:
+            qs = qs.filter(station__owner=self.request.user)
+        return qs
 
 
-class CameraCreateView(AdminRequiredMixin, CreateView):
+class CameraCreateView(CameraRequiredMixin, CreateView):
     model = Camera
     form_class = CameraForm
     template_name = "pages/cameras/form.html"
     success_url = reverse_lazy("camera:list")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
     def get_initial(self):
         initial = super().get_initial()
@@ -95,12 +107,17 @@ class CameraCreateView(AdminRequiredMixin, CreateView):
         return response
 
 
-class CameraUpdateView(AdminRequiredMixin, UpdateView):
+class CameraUpdateView(CameraRequiredMixin, UpdateView):
     model = Camera
     form_class = CameraForm
     template_name = "pages/cameras/form.html"
     slug_field = "code"
     slug_url_kwarg = "code"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -118,7 +135,7 @@ class CameraUpdateView(AdminRequiredMixin, UpdateView):
         return reverse_lazy("camera:detail", kwargs={"code": self.object.code})
 
 
-class CameraDeleteView(AdminRequiredMixin, DeleteView):
+class CameraDeleteView(CameraRequiredMixin, DeleteView):
     model = Camera
     template_name = "pages/cameras/confirm_delete.html"
     slug_field = "code"

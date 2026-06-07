@@ -47,59 +47,83 @@
   </div>
 
   {% if events %}
-    <div class="table-wrapper">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>{% trans "Code" %}</th>
-            <th>{% trans "Name" %}</th>
-            <th>{% trans "Type" %}</th>
-            <th>{% trans "Detected at (UTC)" %}</th>
-            <th>{% trans "Status" %}</th>
-            <th class="text-center">{% trans "Stations" %}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for ev in events %}
-            <tr>
-              <td>
-                <a href="{% url 'events:detail' ev.code %}"
-                   class="font-mono text-indigo-600 dark:text-indigo-400 hover:underline text-sm">
-                  {{ ev.code }}
+    <div class="space-y-4">
+      {% for ev in events %}
+        <article class="rounded-3xl border border-slate-200/80 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/80 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden event-card">
+          <button type="button"
+                  class="event-card-toggle flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                  aria-expanded="false">
+            <div class="min-w-0 space-y-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <a href="{% url 'events:detail' ev.code %}" class="text-base font-semibold text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400">
+                  {{ ev.name }}
                 </a>
-              </td>
-              <td class="font-medium text-slate-900 dark:text-slate-100">{{ ev.name }}</td>
-              <td>
-                <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                  {{ ev.get_event_type_display }}
-                </span>
-              </td>
-              <td class="text-slate-500 dark:text-slate-400 text-sm tabular-nums">
-                {{ ev.detected_at|date:"Y-m-d H:i" }}
-              </td>
-              <td>
-                {% if ev.status == 'published' %}
-                  <span class="badge badge-green"><span class="dot-green"></span>{{ ev.get_status_display }}</span>
-                {% elif ev.status == 'confirmed' %}
-                  <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ ev.get_status_display }}</span>
-                {% elif ev.status == 'archived' %}
-                  <span class="badge"><span class="dot"></span>{{ ev.get_status_display }}</span>
-                {% else %}
-                  <span class="badge badge-red"><span class="dot-red"></span>{{ ev.get_status_display }}</span>
-                {% endif %}
-              </td>
-              <td class="text-center text-slate-600 dark:text-slate-400">{{ ev.stations.count }}</td>
-              <td class="text-right">
-                <a href="{% url 'events:detail' ev.code %}" class="btn-ghost btn-sm">{% trans "View" %}</a>
+                <span class="rounded-full bg-indigo-100 dark:bg-indigo-500/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700 dark:text-indigo-200">{{ ev.get_event_type_display }}</span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                {{ ev.code }} · {{ ev.detected_at|date:"Y-m-d H:i" }} UTC · {{ ev.stations.count }} {% trans "stations" %}
+              </p>
+            </div>
+            <div class="flex items-center gap-3">
+              {% if ev.status == 'published' %}
+                <span class="badge badge-green"><span class="dot-green"></span>{{ ev.get_status_display }}</span>
+              {% elif ev.status == 'confirmed' %}
+                <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ ev.get_status_display }}</span>
+              {% elif ev.status == 'archived' %}
+                <span class="badge"><span class="dot"></span>{{ ev.get_status_display }}</span>
+              {% else %}
+                <span class="badge badge-red"><span class="dot-red"></span>{{ ev.get_status_display }}</span>
+              {% endif %}
+              <svg class="event-card-icon h-5 w-5 text-slate-400 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+          </button>
+
+          <div class="event-card-body hidden border-t border-slate-100 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/60 p-4 md:p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-4 text-sm text-slate-600 dark:text-slate-300">
+              <p>{% trans "Linked reports for this event" %}</p>
+              <div class="flex items-center gap-2">
+                <a href="{% url 'events:detail' ev.code %}" class="btn-ghost btn-sm">{% trans "Open event" %}</a>
                 {% if request.user.role == 'admin' %}
                   <a href="{% url 'events:edit' ev.code %}" class="btn-ghost btn-sm">{% trans "Edit" %}</a>
                 {% endif %}
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+              </div>
+            </div>
+
+            {% if ev.report_cards %}
+              <div class="overflow-x-auto rounded-2xl border border-slate-200/70 dark:border-slate-700/80 bg-white dark:bg-slate-900/90 p-2">
+                <table class="ag-grid-table w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th>{% trans "Station" %}</th>
+                      <th>{% trans "Device" %}</th>
+                      <th>{% trans "Recorded at" %}</th>
+                      <th>{% trans "Status" %}</th>
+                      <th>{% trans "Files" %}</th>
+                      <th>{% trans "Link" %}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for report in ev.report_cards %}
+                      <tr>
+                        <td>{{ report.station.name }}</td>
+                        <td>{% if report.camera %}{{ report.camera.name }}{% elif report.radio_receiver %}{{ report.radio_receiver.name }}{% else %}—{% endif %}</td>
+                        <td class="tabular-nums">{{ report.recorded_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ report.get_status_display }}</td>
+                        <td class="text-center">{{ report.files_count }}</td>
+                        <td><a href="{% url 'reports:detail' report.pk %}" class="text-indigo-600 dark:text-indigo-400 hover:underline">{% trans "Open" %}</a></td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <p class="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 px-4 py-6 text-sm text-slate-500 dark:text-slate-400">{% trans "No reports are linked to this event yet." %}</p>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
     </div>
 
     {% if is_paginated %}
@@ -137,4 +161,35 @@
 
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  'use strict';
+
+  document.querySelectorAll('.event-card-toggle').forEach(function (button) {
+    button.addEventListener('click', function () {
+      const card = this.closest('.event-card');
+      const body = card.querySelector('.event-card-body');
+      const icon = card.querySelector('.event-card-icon');
+      const expanded = this.getAttribute('aria-expanded') === 'true';
+
+      this.setAttribute('aria-expanded', String(!expanded));
+      body.classList.toggle('hidden', expanded);
+      icon.style.transform = expanded ? '' : 'rotate(180deg)';
+
+      if (!expanded) {
+        window.setTimeout(function () {
+          card.querySelectorAll('.ag-grid-shell .ag-theme-alpine-dark').forEach(function (gridDiv) {
+            if (gridDiv.__agGridApi && typeof gridDiv.__agGridApi.sizeColumnsToFit === 'function') {
+              gridDiv.__agGridApi.sizeColumnsToFit();
+            }
+          });
+        }, 60);
+      }
+    });
+  });
+}());
+</script>
 {% endblock %}

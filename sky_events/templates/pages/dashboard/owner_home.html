@@ -66,10 +66,10 @@
 </div>
 
 {# ── My stations placeholder ─────────────────────────────────────────────── #}
-<div class="card">
+<div class="card mb-6">
   <div class="card-header">
     <h3 class="card-title">{% trans "My stations" %}</h3>
-    <a href="#" class="btn-primary btn-sm">
+    <a href="{% url 'station:list' %}" class="btn-primary btn-sm">
       <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
       </svg>
@@ -77,7 +77,44 @@
     </a>
   </div>
 
-  {% if my_station_count == 0 %}
+  {% if my_stations %}
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{% trans "Station name" %}</th>
+            <th>{% trans "Code" %}</th>
+            <th>{% trans "Cameras" %}</th>
+            <th>{% trans "Radios" %}</th>
+            <th>{% trans "Status" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for station in my_stations %}
+            <tr>
+              <td class="font-medium">
+                <a href="{% url 'station:detail' station.code %}" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+                  {{ station.name }}
+                </a>
+              </td>
+              <td class="text-slate-500 dark:text-slate-400 font-mono text-xs">{{ station.code }}</td>
+              <td class="text-slate-500 dark:text-slate-400">{{ station.camera_count }}</td>
+              <td class="text-slate-500 dark:text-slate-400">{{ station.radio_count }}</td>
+              <td>
+                {% if station.status == 'active' %}
+                  <span class="badge badge-green"><span class="dot-green"></span>{{ station.get_status_display }}</span>
+                {% elif station.status == 'maintenance' %}
+                  <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ station.get_status_display }}</span>
+                {% else %}
+                  <span class="badge"><span class="dot"></span>{{ station.get_status_display }}</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
     <div class="empty-state">
       <div class="empty-state-icon" aria-hidden="true">
         <svg class="w-7 h-7 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -88,30 +125,59 @@
       <p class="empty-state-desc">
         {% trans "Add your first observation station to start monitoring." %}
       </p>
-      <a href="#" class="btn-primary btn-sm mt-4">{% trans "Add station" %}</a>
-    </div>
-  {% else %}
-    <div class="table-wrapper">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>{% trans "Station name" %}</th>
-            <th>{% trans "Location" %}</th>
-            <th>{% trans "Cameras" %}</th>
-            <th>{% trans "Radios" %}</th>
-            <th>{% trans "Status" %}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td colspan="5" class="text-center text-slate-400 py-8">
-              {% trans "Station list coming soon" %}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <a href="{% url 'station:create' %}" class="btn-primary btn-sm mt-4">{% trans "Add station" %}</a>
     </div>
   {% endif %}
+</div>
+
+{# ── Mis últimos reportes ─────────────────────────────────────────────── #}
+<div class="card mt-6">
+  <div class="card-header">
+    <h3 class="card-title">{% trans "Mis últimos reportes" %}</h3>
+    <a href="{% url 'reports:list' %}" class="btn-ghost btn-xs">{% trans "Ver todos" %}</a>
+  </div>
+  <div class="card-body p-0">
+    {% if my_recent_reports %}
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{% trans "Estación" %}</th>
+              <th>{% trans "Dispositivo" %}</th>
+              <th>{% trans "Detectado (UTC)" %}</th>
+              <th>{% trans "Estado" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for report in my_recent_reports %}
+              <tr>
+                <td class="font-medium">
+                  <a href="{% url 'reports:detail' report.pk %}" class="hover:text-indigo-600 dark:hover:text-indigo-400">{{ report.station.name }}</a>
+                </td>
+                <td class="text-slate-500 dark:text-slate-400 text-xs">
+                  {% if report.camera %}{{ report.camera.name }}
+                  {% elif report.radio_receiver %}{{ report.radio_receiver.name }}
+                  {% else %}&mdash;{% endif %}
+                </td>
+                <td class="text-xs font-mono tabular-nums whitespace-nowrap">{{ report.recorded_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                  {% if report.status == 'linked' %}
+                    <span class="badge badge-green"><span class="dot-green"></span>{{ report.get_status_display }}</span>
+                  {% elif report.status == 'archived' %}
+                    <span class="badge"><span class="dot"></span>{{ report.get_status_display }}</span>
+                  {% else %}
+                    <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ report.get_status_display }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{% trans "Sin reportes recientes." %}</p>
+    {% endif %}
+  </div>
 </div>
 
 {% endblock %}

@@ -223,4 +223,20 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 station__owner=user
             ).count()
 
+            from sky_events.apps.reports.models import StationReport
+
+            ctx["my_stations"] = (
+                Station.objects.filter(owner=user)
+                .annotate(
+                    camera_count=Count("cameras", distinct=True),
+                    radio_count=Count("radio_receivers", distinct=True),
+                )
+                .order_by("name")
+            )
+            ctx["my_recent_reports"] = (
+                StationReport.objects.filter(station__owner=user)
+                .select_related("station", "camera", "radio_receiver", "event")
+                .order_by("-recorded_at")[:6]
+            )
+
         return ctx

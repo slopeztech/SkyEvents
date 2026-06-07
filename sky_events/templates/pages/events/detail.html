@@ -188,7 +188,7 @@
           </div>
         {% endif %}
       {% endwith %}
-      {% if request.user.role == 'admin' %}
+      {% if request.user.is_authenticated %}
         <div class="px-5 py-3 border-t border-slate-100 dark:border-slate-700">
           <a href="{% url 'reports:create' %}?event={{ event.pk }}" class="btn-ghost btn-xs">{% trans "Add report" %}</a>
         </div>

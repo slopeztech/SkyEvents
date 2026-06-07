@@ -10,6 +10,7 @@ from __future__ import annotations
 from django import forms
 
 from sky_events.apps.station.models import Station
+from sky_events.apps.users.models import UserRole
 
 from .models import Camera
 
@@ -41,6 +42,11 @@ class CameraForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
-        self.fields["station"].queryset = Station.objects.order_by("name")
+
+        if self.request and self.request.user.role != UserRole.ADMIN:
+            self.fields["station"].queryset = Station.objects.filter(owner=self.request.user).order_by("name")
+        else:
+            self.fields["station"].queryset = Station.objects.order_by("name")
         self.fields["station"].label_from_instance = lambda s: f"{s.name} [{s.code}]"

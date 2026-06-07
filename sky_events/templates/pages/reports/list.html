@@ -12,7 +12,7 @@
     <h2 class="page-title">{% trans "Reports" %}</h2>
     <p class="page-subtitle">{{ total }} {% trans "records" %}</p>
   </div>
-  {% if request.user.role == 'admin' %}
+  {% if request.user.is_authenticated %}
     <a href="{% url 'reports:create' %}" class="btn-primary btn-sm flex items-center gap-1.5">
       <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/>
@@ -61,10 +61,10 @@
       {% if grp.count == 1 %}
         {# â”€â”€ Single report (flat row) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
         {% with r=grp.reports.0 %}
-        <div class="card">
-          <div class="flex items-center gap-3 px-4 py-3">
+        <div class="card rounded-3xl border border-slate-200/80 bg-white/95 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+          <div class="flex flex-wrap items-center gap-3 px-5 py-4 lg:min-h-[84px]">
 
-            {# Checkbox â€” only for unlinked reports and admin users #}
+            {# Checkbox — only for unlinked reports and admin users #}
             <div class="w-5 flex-shrink-0 flex items-center justify-center">
               {% if not r.event and request.user.role == 'admin' %}
                 <input type="checkbox"
@@ -74,22 +74,22 @@
             </div>
 
             {# Station #}
-            <div class="w-40 flex-shrink-0 min-w-0">
+            <div class="min-w-[180px] flex-1">
               <a href="{% url 'reports:detail' r.pk %}"
-                 class="text-sm font-medium text-slate-800 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 truncate block">
+                 class="text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 truncate block">
                 {{ r.station.name }}
               </a>
             </div>
 
             {# Device #}
-            <div class="flex-1 min-w-0">
+            <div class="min-w-[150px] flex-1">
               <span class="text-xs text-slate-500 truncate block">
-                {% if r.camera %}{{ r.camera.name }}{% elif r.radio_receiver %}{{ r.radio_receiver.name }}{% else %}â€”{% endif %}
+                {% if r.camera %}{{ r.camera.name }}{% elif r.radio_receiver %}{{ r.radio_receiver.name }}{% else %}—{% endif %}
               </span>
             </div>
 
             {# Recorded at #}
-            <div class="w-36 flex-shrink-0 tabular-nums text-xs text-slate-500 dark:text-slate-400">
+            <div class="w-40 flex-shrink-0 tabular-nums text-xs font-mono text-slate-600 dark:text-slate-300">
               {{ r.recorded_at|date:"Y-m-d H:i:s" }}
             </div>
 
@@ -97,16 +97,16 @@
             <div class="w-28 flex-shrink-0">
               {% if r.event %}
                 <a href="{% url 'events:detail' r.event.code %}"
-                   class="font-mono text-xs text-indigo-500 dark:text-indigo-400 hover:underline">
+                   class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 hover:underline">
                   {{ r.event.code }}
                 </a>
               {% else %}
-                <span class="text-slate-300 dark:text-slate-600 text-xs">â€”</span>
+                <span class="text-slate-300 dark:text-slate-600 text-xs">—</span>
               {% endif %}
             </div>
 
             {# Status #}
-            <div class="w-24 flex-shrink-0">
+            <div class="w-28 flex-shrink-0">
               {% if r.status == 'linked' %}
                 <span class="badge badge-green"><span class="dot-green"></span>{{ r.get_status_display }}</span>
               {% elif r.status == 'archived' %}
@@ -117,13 +117,13 @@
             </div>
 
             {# Files count #}
-            <div class="w-8 flex-shrink-0 tabular-nums text-xs text-slate-400 text-center">
+            <div class="w-10 flex-shrink-0 tabular-nums text-xs text-slate-400 text-center">
               {{ r.files_count }}
             </div>
 
             {# Ver link #}
-            <div class="flex-shrink-0">
-              <a href="{% url 'reports:detail' r.pk %}" class="btn-ghost btn-xs">{% trans "Ver" %}</a>
+            <div class="ml-auto flex-shrink-0">
+              <a href="{% url 'reports:detail' r.pk %}" class="btn-primary btn-xs inline-flex items-center gap-1.5 shadow-sm">{% trans "Ver" %}</a>
             </div>
 
           </div>
@@ -131,11 +131,11 @@
         {% endwith %}
 
       {% else %}
-        {# â”€â”€ Multi-report group (collapsible card) â”€â”€â”€â”€â”€â”€â”€â”€â”€ #}
-        <div class="card border-l-4 border-indigo-300 dark:border-indigo-600 report-group-card">
+        {# ── Multi-report group (collapsible card) ───────────────────────── #}
+        <div class="card rounded-3xl border border-slate-200/80 bg-white/95 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden report-group-card">
 
           {# Group header (click to collapse) #}
-          <div class="group-header flex items-center gap-3 px-4 py-3 cursor-pointer select-none">
+          <div class="group-header flex items-start gap-4 px-5 py-4 cursor-pointer select-none border-b border-slate-100 dark:border-slate-700/70 bg-slate-50/80 dark:bg-slate-800/70">
 
             <div class="w-5 flex-shrink-0 flex items-center justify-center">
               {% if grp.has_unlinked and request.user.role == 'admin' %}
@@ -145,20 +145,31 @@
               {% endif %}
             </div>
 
-            <div class="flex-1 min-w-0">
-              <span class="font-semibold text-sm text-slate-800 dark:text-slate-100">
-                {% if grp.time_start != grp.time_end %}
-                  {{ grp.time_start|date:"H:i:s" }} &ndash; {{ grp.time_end|date:"H:i:s" }} UTC
-                {% else %}
-                  {{ grp.time_start|date:"H:i:s" }} UTC
-                {% endif %}
-              </span>
-              <span class="text-xs text-slate-400 dark:text-slate-500 ml-2">
-                {{ grp.count }} {% trans "reports" %}{% if grp.stations %} &middot; {{ grp.stations|join:", " }}{% endif %}
-              </span>
+            <div class="flex-1 min-w-0 space-y-1">
+              {% if grp.kind == 'event' and grp.event %}
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-200">{% trans "Evento" %}</span>
+                  <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ grp.event.name }}</span>
+                  <span class="text-xs text-slate-500 dark:text-slate-400">{{ grp.event.get_event_type_display }}</span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                  {{ grp.event.code }} · {{ grp.event.detected_at|date:"Y-m-d H:i" }} UTC · {{ grp.count }} {% trans "reportes" %}
+                </p>
+              {% else %}
+                <span class="font-semibold text-sm text-slate-800 dark:text-slate-100">
+                  {% if grp.time_start != grp.time_end %}
+                    {{ grp.time_start|date:"H:i:s" }} &ndash; {{ grp.time_end|date:"H:i:s" }} UTC
+                  {% else %}
+                    {{ grp.time_start|date:"H:i:s" }} UTC
+                  {% endif %}
+                </span>
+                <span class="text-xs text-slate-400 dark:text-slate-500 ml-2">
+                  {{ grp.count }} {% trans "reports" %}{% if grp.stations %} &middot; {{ grp.stations|join:", " }}{% endif %}
+                </span>
+              {% endif %}
             </div>
 
-            <button class="group-toggle btn-ghost btn-xs flex-shrink-0" type="button" aria-expanded="true">
+            <button class="group-toggle btn-ghost btn-xs flex-shrink-0" type="button" aria-expanded="false">
               <svg class="w-4 h-4 transition-transform duration-150" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
               </svg>
@@ -166,66 +177,59 @@
           </div>
 
           {# Group body #}
-          <div class="group-body divide-y divide-slate-100 dark:divide-slate-700 border-t border-slate-100 dark:border-slate-700">
-            {% for r in grp.reports %}
-              <div class="flex items-center gap-3 px-4 py-2.5">
-
-                <div class="w-5 flex-shrink-0 flex items-center justify-center">
-                  {% if not r.event and request.user.role == 'admin' %}
-                    <input type="checkbox"
-                           class="report-check group-check-item w-4 h-4 rounded text-indigo-600 border-slate-300 cursor-pointer"
-                           data-pk="{{ r.pk }}">
-                  {% endif %}
-                </div>
-
-                <div class="w-40 flex-shrink-0 min-w-0">
-                  <a href="{% url 'reports:detail' r.pk %}"
-                     class="text-sm font-medium text-slate-800 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 truncate block">
-                    {{ r.station.name }}
-                  </a>
-                </div>
-
-                <div class="flex-1 min-w-0">
-                  <span class="text-xs text-slate-500 truncate block">
-                    {% if r.camera %}{{ r.camera.name }}{% elif r.radio_receiver %}{{ r.radio_receiver.name }}{% else %}â€”{% endif %}
-                  </span>
-                </div>
-
-                <div class="w-36 flex-shrink-0 tabular-nums text-xs text-slate-500 dark:text-slate-400">
-                  {{ r.recorded_at|date:"H:i:s" }}
-                </div>
-
-                <div class="w-28 flex-shrink-0">
-                  {% if r.event %}
-                    <a href="{% url 'events:detail' r.event.code %}"
-                       class="font-mono text-xs text-indigo-500 dark:text-indigo-400 hover:underline">
-                      {{ r.event.code }}
-                    </a>
-                  {% else %}
-                    <span class="text-slate-300 dark:text-slate-600 text-xs">â€”</span>
-                  {% endif %}
-                </div>
-
-                <div class="w-24 flex-shrink-0">
-                  {% if r.status == 'linked' %}
-                    <span class="badge badge-green"><span class="dot-green"></span>{{ r.get_status_display }}</span>
-                  {% elif r.status == 'archived' %}
-                    <span class="badge"><span class="dot"></span>{{ r.get_status_display }}</span>
-                  {% else %}
-                    <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ r.get_status_display }}</span>
-                  {% endif %}
-                </div>
-
-                <div class="w-8 flex-shrink-0 tabular-nums text-xs text-slate-400 text-center">
-                  {{ r.files_count }}
-                </div>
-
-                <div class="flex-shrink-0">
-                  <a href="{% url 'reports:detail' r.pk %}" class="btn-ghost btn-xs">{% trans "Ver" %}</a>
-                </div>
-
-              </div>
-            {% endfor %}
+          <div class="group-body hidden border-t border-slate-100 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70 p-3">
+            <div class="overflow-x-auto rounded-2xl border border-slate-200/70 dark:border-slate-700/80 bg-white dark:bg-slate-950/90 p-2">
+              <table class="ag-grid-table w-full text-sm">
+                <thead>
+                  <tr>
+                    <th class="w-8"></th>
+                    <th>{% trans "Station" %}</th>
+                    <th>{% trans "Device" %}</th>
+                    <th>{% trans "Recorded at" %}</th>
+                    <th>{% trans "Event" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th>{% trans "Files" %}</th>
+                    <th>{% trans "View" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for r in grp.reports %}
+                    <tr>
+                      <td>
+                        {% if not r.event and request.user.role == 'admin' %}
+                          <input type="checkbox"
+                                 class="report-check group-check-item w-4 h-4 rounded text-indigo-600 border-slate-300 cursor-pointer"
+                                 data-pk="{{ r.pk }}">
+                        {% endif %}
+                      </td>
+                      <td>
+                        <a href="{% url 'reports:detail' r.pk %}" class="font-semibold text-slate-800 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400">{{ r.station.name }}</a>
+                      </td>
+                      <td>{% if r.camera %}{{ r.camera.name }}{% elif r.radio_receiver %}{{ r.radio_receiver.name }}{% else %}—{% endif %}</td>
+                      <td class="tabular-nums text-xs font-mono text-slate-600 dark:text-slate-300">{{ r.recorded_at|date:"H:i:s" }}</td>
+                      <td>
+                        {% if r.event %}
+                          <a href="{% url 'events:detail' r.event.code %}" class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300 hover:underline">{{ r.event.code }}</a>
+                        {% else %}
+                          <span class="text-slate-300 dark:text-slate-600 text-xs">—</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if r.status == 'linked' %}
+                          <span class="badge badge-green"><span class="dot-green"></span>{{ r.get_status_display }}</span>
+                        {% elif r.status == 'archived' %}
+                          <span class="badge"><span class="dot"></span>{{ r.get_status_display }}</span>
+                        {% else %}
+                          <span class="badge badge-yellow"><span class="dot-yellow"></span>{{ r.get_status_display }}</span>
+                        {% endif %}
+                      </td>
+                      <td class="tabular-nums text-center">{{ r.files_count }}</td>
+                      <td><a href="{% url 'reports:detail' r.pk %}" class="btn-primary btn-xs inline-flex items-center gap-1.5 shadow-sm">{% trans "Ver" %}</a></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
 
         </div>
@@ -238,7 +242,7 @@
   <div class="card">
     <div class="card-body text-center py-16 space-y-3">
       <p class="text-slate-400 text-sm">{% trans "No reports found." %}</p>
-      {% if request.user.role == 'admin' %}
+      {% if request.user.is_authenticated %}
         <a href="{% url 'reports:create' %}" class="btn-primary btn-sm inline-flex items-center gap-1.5">
           {% trans "Create first report" %}
         </a>
@@ -254,63 +258,84 @@
 (function () {
   'use strict';
 
-  const bar = document.getElementById('selection-bar');
-  if (!bar) return;  // non-admin: no checkboxes, nothing to do
-
-  const countEl  = document.getElementById('selection-count');
-  const createBtn = document.getElementById('create-event-btn');
-  const clearBtn  = document.getElementById('clear-selection');
-  const baseUrl   = createBtn.dataset.baseUrl;
-
-  function getCheckedPks() {
-    return [...document.querySelectorAll('.report-check:checked')].map(c => c.dataset.pk);
-  }
-
-  function updateBar() {
-    const pks = getCheckedPks();
-    if (pks.length > 0) {
-      countEl.textContent = pks.length + ' {% trans "selected" %}';
-      createBtn.href = baseUrl + '?reports=' + pks.join(',');
-      bar.classList.remove('hidden');
-    } else {
-      bar.classList.add('hidden');
-    }
-  }
-
-  // Individual checkboxes
-  document.querySelectorAll('.report-check').forEach(function (c) {
-    c.addEventListener('change', updateBar);
-  });
-
-  // Group master checkbox â€” toggles all unlinked reports in that group
-  document.querySelectorAll('.group-master-check').forEach(function (master) {
-    master.addEventListener('change', function () {
-      var card = this.closest('.report-group-card');
-      card.querySelectorAll('.report-check').forEach(function (c) {
-        c.checked = master.checked;
+  function resizeAgGrids(card) {
+    window.setTimeout(function () {
+      card.querySelectorAll('.ag-grid-shell .ag-theme-alpine-dark').forEach(function (gridDiv) {
+        if (gridDiv.__agGridApi && typeof gridDiv.__agGridApi.sizeColumnsToFit === 'function') {
+          gridDiv.__agGridApi.sizeColumnsToFit();
+          window.setTimeout(function () {
+            gridDiv.__agGridApi.sizeColumnsToFit();
+          }, 120);
+        }
       });
-      updateBar();
+    }, 60);
+  }
+
+  const bar = document.getElementById('selection-bar');
+
+  if (bar) {
+    const countEl = document.getElementById('selection-count');
+    const createBtn = document.getElementById('create-event-btn');
+    const clearBtn = document.getElementById('clear-selection');
+    const baseUrl = createBtn.dataset.baseUrl;
+
+    function getCheckedPks() {
+      return [...document.querySelectorAll('.report-check:checked')].map(function (c) { return c.dataset.pk; });
+    }
+
+    function updateBar() {
+      const pks = getCheckedPks();
+      if (pks.length > 0) {
+        countEl.textContent = pks.length + ' {% trans "selected" %}';
+        createBtn.href = baseUrl + '?reports=' + pks.join(',');
+        bar.classList.remove('hidden');
+      } else {
+        bar.classList.add('hidden');
+      }
+    }
+
+    // Individual checkboxes
+    document.querySelectorAll('.report-check').forEach(function (c) {
+      c.addEventListener('change', updateBar);
     });
-  });
 
-  // Clear all selections
-  clearBtn.addEventListener('click', function () {
-    document.querySelectorAll('.report-check').forEach(function (c) { c.checked = false; });
-    document.querySelectorAll('.group-master-check').forEach(function (c) { c.checked = false; });
-    bar.classList.add('hidden');
-  });
+    // Group master checkbox — toggles all unlinked reports in that group
+    document.querySelectorAll('.group-master-check').forEach(function (master) {
+      master.addEventListener('change', function () {
+        var card = this.closest('.report-group-card');
+        card.querySelectorAll('.report-check').forEach(function (c) {
+          c.checked = master.checked;
+        });
+        updateBar();
+      });
+    });
 
-  // Collapsible groups â€” click header to toggle body
+    // Clear all selections
+    clearBtn.addEventListener('click', function () {
+      document.querySelectorAll('.report-check').forEach(function (c) { c.checked = false; });
+      document.querySelectorAll('.group-master-check').forEach(function (c) { c.checked = false; });
+      bar.classList.add('hidden');
+    });
+  }
+
+  // Collapsible groups — click header to toggle body for every user role.
   document.querySelectorAll('.group-header').forEach(function (header) {
     header.addEventListener('click', function (e) {
       if (e.target.closest('input')) return; // don't collapse when clicking checkbox
+
       var card = this.closest('.report-group-card');
       var body = card.querySelector('.group-body');
-      var btn  = card.querySelector('.group-toggle');
-      var svg  = btn.querySelector('svg');
-      var collapsed = body.classList.toggle('hidden');
-      btn.setAttribute('aria-expanded', String(!collapsed));
-      svg.style.transform = collapsed ? 'rotate(-90deg)' : '';
+      var btn = card.querySelector('.group-toggle');
+      var svg = btn.querySelector('svg');
+      var expanded = btn.getAttribute('aria-expanded') === 'true';
+
+      btn.setAttribute('aria-expanded', String(!expanded));
+      body.classList.toggle('hidden', expanded);
+      svg.style.transform = expanded ? '' : 'rotate(180deg)';
+
+      if (!expanded) {
+        resizeAgGrids(card);
+      }
     });
   });
 

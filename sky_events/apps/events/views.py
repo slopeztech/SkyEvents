@@ -15,7 +15,7 @@ import json
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -46,9 +46,14 @@ class EventListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
+        reports_qs = (
+            StationReport.objects.select_related("station", "camera", "radio_receiver")
+            .annotate(files_count=Count("files"))
+            .order_by("-recorded_at")
+        )
         qs = (
             AstronomicalEvent.objects.select_related("created_by")
-            .prefetch_related("stations")
+            .prefetch_related("stations", Prefetch("reports", queryset=reports_qs, to_attr="report_cards"))
             .order_by("-detected_at")
         )
         status = self.request.GET.get("status")

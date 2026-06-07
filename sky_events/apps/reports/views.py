@@ -1,8 +1,8 @@
 """
 Views for the reports app.
 
-All write operations require admin role.
-List / detail are accessible to authenticated users.
+Manual report creation is available to authenticated users.
+Edit / delete operations remain admin-only.
 
 @file   sky_events/apps/reports/views.py
 @author slopez.tech
@@ -57,28 +57,29 @@ _REPORT_TAB_KEYS = {t[0] for t in REPORT_TABS}
 _GROUP_GAP_SECONDS = 30
 
 
-def _make_group_meta(reports):
-    """Build a metadata dict for a time-proximity group of StationReport objects."""
+def _make_group_meta(reports, *, kind="time", event=None):
+    """Build metadata for a report group used by the UI."""
     station_names = list(dict.fromkeys(r.station.name for r in reports if r.station))
+    ordered = list(reports)
+    ordered.sort(key=lambda item: item.recorded_at, reverse=True)
     return {
-        "reports": reports,
-        "count": len(reports),
+        "kind": kind,
+        "event": event,
+        "reports": ordered,
+        "count": len(ordered),
         "stations": station_names,
-        "has_unlinked": any(r.event_id is None for r in reports),
-        # reports are newest-first; last element is oldest
-        "time_end": reports[0].recorded_at,
-        "time_start": reports[-1].recorded_at,
+        "has_unlinked": any(r.event_id is None for r in ordered),
+        # newest-first for display
+        "time_end": ordered[0].recorded_at,
+        "time_start": ordered[-1].recorded_at,
     }
 
 
-def _build_report_groups(reports):
-    """
-    Group an already-sorted (newest-first) list of StationReport objects by
-    temporal proximity.  Reports within _GROUP_GAP_SECONDS of the previous
-    report belong to the same group.
-    """
+def _build_time_groups(reports):
+    """Group reports by temporal proximity when they are not linked to an event."""
     if not reports:
         return []
+
     groups = []
     current = [reports[0]]
     for rep in reports[1:]:
@@ -86,9 +87,29 @@ def _build_report_groups(reports):
         if gap <= _GROUP_GAP_SECONDS:
             current.append(rep)
         else:
-            groups.append(_make_group_meta(current))
+            groups.append(_make_group_meta(current, kind="time"))
             current = [rep]
-    groups.append(_make_group_meta(current))
+    groups.append(_make_group_meta(current, kind="time"))
+    return groups
+
+
+def _build_report_groups(reports):
+    """Group reports by event first, then by time proximity for the rest."""
+    if not reports:
+        return []
+
+    groups = []
+    event_map = {}
+    for rep in reports:
+        if rep.event_id:
+            event_map.setdefault(rep.event_id, []).append(rep)
+
+    for event_id, event_reports in event_map.items():
+        event = event_reports[0].event
+        groups.append(_make_group_meta(event_reports, kind="event", event=event))
+
+    remaining = [rep for rep in reports if rep.event_id is None]
+    groups.extend(_build_time_groups(remaining))
     return groups
 
 
@@ -160,10 +181,15 @@ class ReportDetailView(LoginRequiredMixin, DetailView):
 # ---------------------------------------------------------------------------
 
 
-class ReportCreateView(AdminRequiredMixin, CreateView):
+class ReportCreateView(LoginRequiredMixin, CreateView):
     model = StationReport
     form_class = StationReportForm
     template_name = "pages/reports/form.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
     def get_success_url(self):
         return reverse_lazy("reports:detail", kwargs={"pk": self.object.pk})

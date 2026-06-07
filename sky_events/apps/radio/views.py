@@ -23,15 +23,17 @@ from .forms import RadioReceiverForm
 from .models import RadioReceiver
 
 
-class AdminRequiredMixin(LoginRequiredMixin):
+class RadioRequiredMixin(LoginRequiredMixin):
+    """Allow admins and station owners to manage their own radio receivers."""
+
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated or request.user.role != UserRole.ADMIN:
+        if not request.user.is_authenticated:
             messages.error(request, _("You do not have permission to access this page."))
             return redirect("web:dashboard")
         return super().dispatch(request, *args, **kwargs)
 
 
-class RadioListView(AdminRequiredMixin, ListView):
+class RadioListView(RadioRequiredMixin, ListView):
     model = RadioReceiver
     template_name = "pages/radios/list.html"
     context_object_name = "radios"
@@ -39,6 +41,8 @@ class RadioListView(AdminRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = RadioReceiver.objects.select_related("station").order_by("station__name", "name")
+        if self.request.user.role != UserRole.ADMIN:
+            qs = qs.filter(station__owner=self.request.user)
         if status := self.request.GET.get("status", ""):
             qs = qs.filter(status=status)
         if station_code := self.request.GET.get("station", ""):
@@ -57,7 +61,7 @@ class RadioListView(AdminRequiredMixin, ListView):
         return ctx
 
 
-class RadioDetailView(AdminRequiredMixin, DetailView):
+class RadioDetailView(RadioRequiredMixin, DetailView):
     model = RadioReceiver
     template_name = "pages/radios/detail.html"
     context_object_name = "radio"
@@ -65,14 +69,22 @@ class RadioDetailView(AdminRequiredMixin, DetailView):
     slug_url_kwarg = "code"
 
     def get_queryset(self):
-        return RadioReceiver.objects.select_related("station")
+        qs = RadioReceiver.objects.select_related("station")
+        if self.request.user.role != UserRole.ADMIN:
+            qs = qs.filter(station__owner=self.request.user)
+        return qs
 
 
-class RadioCreateView(AdminRequiredMixin, CreateView):
+class RadioCreateView(RadioRequiredMixin, CreateView):
     model = RadioReceiver
     form_class = RadioReceiverForm
     template_name = "pages/radios/form.html"
     success_url = reverse_lazy("radio:list")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
     def get_initial(self):
         initial = super().get_initial()
@@ -95,12 +107,17 @@ class RadioCreateView(AdminRequiredMixin, CreateView):
         return response
 
 
-class RadioUpdateView(AdminRequiredMixin, UpdateView):
+class RadioUpdateView(RadioRequiredMixin, UpdateView):
     model = RadioReceiver
     form_class = RadioReceiverForm
     template_name = "pages/radios/form.html"
     slug_field = "code"
     slug_url_kwarg = "code"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -118,7 +135,7 @@ class RadioUpdateView(AdminRequiredMixin, UpdateView):
         return reverse_lazy("radio:detail", kwargs={"code": self.object.code})
 
 
-class RadioDeleteView(AdminRequiredMixin, DeleteView):
+class RadioDeleteView(RadioRequiredMixin, DeleteView):
     model = RadioReceiver
     template_name = "pages/radios/confirm_delete.html"
     slug_field = "code"

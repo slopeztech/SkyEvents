@@ -14,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from sky_events.apps.camera.models import Camera
 from sky_events.apps.radio.models import RadioReceiver
 from sky_events.apps.station.models import Station
+from sky_events.apps.users.models import UserRole
 
 from .models import ReportFile, StationReport
 
@@ -44,7 +45,16 @@ class StationReportForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
+
+        if self.request and self.request.user.role != UserRole.ADMIN:
+            self.fields["station"].queryset = Station.objects.filter(
+                owner=self.request.user
+            ).order_by("name")
+        else:
+            self.fields["station"].queryset = Station.objects.order_by("name")
+
         # Narrow camera/radio choices to the selected station
         station_pk = None
         if self.instance.pk and self.instance.station_id:

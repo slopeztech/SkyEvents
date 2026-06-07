@@ -23,17 +23,16 @@ from .forms import StationForm
 from .models import Station
 
 
-class AdminRequiredMixin(LoginRequiredMixin):
-    """Restrict access to admin users only."""
+class StationRequiredMixin(LoginRequiredMixin):
+    """Allow admins to manage all stations and station owners to manage their own."""
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated or request.user.role != UserRole.ADMIN:
-            messages.error(request, _("You do not have permission to access this page."))
+        if not request.user.is_authenticated:
             return redirect("web:dashboard")
         return super().dispatch(request, *args, **kwargs)
 
 
-class StationListView(AdminRequiredMixin, ListView):
+class StationListView(StationRequiredMixin, ListView):
     model = Station
     template_name = "pages/stations/list.html"
     context_object_name = "stations"
@@ -48,6 +47,9 @@ class StationListView(AdminRequiredMixin, ListView):
             )
             .order_by("name")
         )
+        if self.request.user.role != UserRole.ADMIN:
+            qs = qs.filter(owner=self.request.user)
+
         if status := self.request.GET.get("status", ""):
             qs = qs.filter(status=status)
         if q := self.request.GET.get("q", ""):
@@ -62,7 +64,7 @@ class StationListView(AdminRequiredMixin, ListView):
         return ctx
 
 
-class StationDetailView(AdminRequiredMixin, DetailView):
+class StationDetailView(StationRequiredMixin, DetailView):
     model = Station
     template_name = "pages/stations/detail.html"
     context_object_name = "station"
@@ -70,16 +72,22 @@ class StationDetailView(AdminRequiredMixin, DetailView):
     slug_url_kwarg = "code"
 
     def get_queryset(self):
-        return Station.objects.select_related("owner").prefetch_related(
-            "cameras", "radio_receivers"
-        )
+        qs = Station.objects.select_related("owner").prefetch_related("cameras", "radio_receivers")
+        if self.request.user.role != UserRole.ADMIN:
+            qs = qs.filter(owner=self.request.user)
+        return qs
 
 
-class StationCreateView(AdminRequiredMixin, CreateView):
+class StationCreateView(StationRequiredMixin, CreateView):
     model = Station
     form_class = StationForm
     template_name = "pages/stations/form.html"
     success_url = reverse_lazy("station:list")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -93,12 +101,17 @@ class StationCreateView(AdminRequiredMixin, CreateView):
         return response
 
 
-class StationUpdateView(AdminRequiredMixin, UpdateView):
+class StationUpdateView(StationRequiredMixin, UpdateView):
     model = Station
     form_class = StationForm
     template_name = "pages/stations/form.html"
     slug_field = "code"
     slug_url_kwarg = "code"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -116,7 +129,7 @@ class StationUpdateView(AdminRequiredMixin, UpdateView):
         return reverse_lazy("station:detail", kwargs={"code": self.object.code})
 
 
-class StationDeleteView(AdminRequiredMixin, DeleteView):
+class StationDeleteView(StationRequiredMixin, DeleteView):
     model = Station
     template_name = "pages/stations/confirm_delete.html"
     slug_field = "code"

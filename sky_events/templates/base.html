@@ -33,8 +33,13 @@
   {% block body %}{% endblock %}
 
   {# Full theme.js loaded after body (inline version in <head> handles FOUC) #}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.1/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.1/styles/ag-theme-alpine.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.1/styles/ag-theme-alpine-dark.css">
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.1/dist/ag-grid-community.min.js"></script>
   <script src="{% static 'js/theme.js' %}"></script>
   <script src="{% static 'js/app.js' %}"></script>
+  <script src="{% static 'js/ag-grid-init.js' %}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
